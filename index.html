@@ -1,0 +1,2387 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Explorer · 我的方向探索工作台</title>
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  color-scheme: dark;
+  --bg:#08090a;
+  --bg-elev:#0b0c0e;
+  --panel:#101113;
+  --panel-2:#15161a;
+  --panel-3:#1b1d21;
+  --border:rgba(255,255,255,.07);
+  --border-strong:rgba(255,255,255,.13);
+  --text:#eceef1;
+  --text-2:#9aa0a8;
+  --text-3:#6a6f78;
+  --accent:#6f7bf7;
+  --accent-hover:#828bf9;
+  --accent-soft:rgba(111,123,247,.14);
+  --accent-line:rgba(111,123,247,.35);
+  --track:rgba(255,255,255,.08);
+  --ok:#4ecb8b;
+  --warn:#e8b04e;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.7);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --r-lg:14px;
+  --r-md:10px;
+  --r-sm:7px;
+  --sidebar-w:238px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+}
+:root[data-theme="light"]{
+  color-scheme: light;
+  --bg:#fbfbfc;
+  --bg-elev:#f6f6f8;
+  --panel:#ffffff;
+  --panel-2:#f7f7f9;
+  --panel-3:#f1f1f4;
+  --border:rgba(15,18,25,.08);
+  --border-strong:rgba(15,18,25,.16);
+  --text:#15171c;
+  --text-2:#5c6270;
+  --text-3:#878d99;
+  --accent:#5a67e8;
+  --accent-hover:#4a57d8;
+  --accent-soft:rgba(90,103,232,.10);
+  --accent-line:rgba(90,103,232,.35);
+  --track:rgba(15,18,25,.07);
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 12px 28px -18px rgba(16,24,40,.28);
+  --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:14px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--accent-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3);background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+.app{display:flex;min-height:100vh;min-height:100dvh}
+.scrim{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;
+  opacity:0;pointer-events:none;transition:opacity .22s ease;
+  backdrop-filter:blur(2px);
+}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar{
+  width:var(--sidebar-w);flex:0 0 var(--sidebar-w);
+  position:sticky;top:0;height:100vh;height:100dvh;
+  display:flex;flex-direction:column;
+  background:var(--bg-elev);
+  border-right:1px solid var(--border);
+  padding:14px 10px 10px;
+  overflow-y:auto;overscroll-behavior:contain;
+}
+.brand{display:flex;align-items:center;gap:9px;padding:6px 8px 14px}
+.brand-mark{
+  width:26px;height:26px;flex:0 0 26px;border-radius:8px;
+  background:linear-gradient(140deg,var(--accent),#a06ff7);
+  display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700;
+  box-shadow:0 2px 10px -2px var(--accent);
+}
+.brand-text{min-width:0}
+.brand-title{font-size:13.5px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.brand-sub{font-size:10.5px;color:var(--text-3);letter-spacing:.04em;font-family:var(--mono)}
+
+.nav-group{margin-top:14px}
+.nav-label{
+  font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--text-3);padding:0 9px;margin-bottom:5px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:9px;width:100%;
+  padding:6.5px 9px;border-radius:var(--r-sm);
+  font-size:13.5px;color:var(--text-2);
+  transition:background .13s ease,color .13s ease;
+  text-align:left;
+}
+.nav-item:hover{background:var(--panel-2);color:var(--text)}
+.nav-item[aria-current="page"]{background:var(--panel-3);color:var(--text);font-weight:500}
+.nav-item[aria-current="page"] .nav-dot{background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.nav-dot{
+  width:5px;height:5px;flex:0 0 5px;border-radius:99px;
+  background:var(--border-strong);transition:background .13s ease,box-shadow .13s ease;
+}
+.nav-ico{width:15px;text-align:center;font-size:12.5px;opacity:.85;flex:0 0 15px}
+.nav-count{margin-left:auto;font-size:10.5px;color:var(--text-3);font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.sidebar-foot{margin-top:auto;padding-top:16px}
+.journey{
+  border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--panel);padding:11px 12px;
+}
+.journey-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);
+  font-weight:600;margin-bottom:9px;
+}
+.week-row{display:flex;align-items:center;gap:8px;padding:3.5px 0;font-size:12px;color:var(--text-3)}
+.week-row.is-done{color:var(--text-2)}
+.week-row.is-active{color:var(--text);font-weight:500}
+.week-dot{
+  width:6px;height:6px;border-radius:99px;background:var(--track);
+  border:1px solid var(--border-strong);flex:0 0 6px;
+}
+.week-row.is-done .week-dot{background:var(--text-3);border-color:transparent}
+.week-row.is-active .week-dot{background:var(--accent);border-color:transparent;box-shadow:0 0 0 3px var(--accent-soft)}
+.week-name{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em}
+
+/* ---------- MAIN ---------- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;gap:12px;
+  padding:12px 26px;
+  border-bottom:1px solid var(--border);
+  background:rgba(8,9,10,.78);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+:root[data-theme="light"] .topbar{background:rgba(251,251,252,.82)}
+.crumb{display:flex;align-items:baseline;gap:10px;min-width:0}
+.crumb-title{font-size:14px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.crumb-sub{font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-actions{margin-left:auto;display:flex;align-items:center;gap:7px}
+.view{
+  padding:30px 26px 90px;
+  width:100%;max-width:1080px;margin:0 auto;flex:1;
+}
+
+/* ============================================================
+   PRIMITIVES
+   ============================================================ */
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  padding:18px;
+  box-shadow:var(--shadow-sm);
+}
+.card.pad-lg{padding:22px}
+.card.flat{box-shadow:none}
+.card-hover{transition:border-color .16s ease,background .16s ease,transform .16s ease}
+.card-hover:hover{border-color:var(--border-strong);background:var(--panel-2)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6.5px 12px;border-radius:var(--r-sm);
+  font-size:13px;font-weight:500;
+  border:1px solid var(--border-strong);
+  background:var(--panel-2);color:var(--text);
+  transition:background .13s ease,border-color .13s ease,opacity .13s ease;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--panel-3);border-color:var(--text-3)}
+.btn.primary{background:var(--accent);border-color:transparent;color:#fff}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--text-2)}
+.btn.ghost:hover{background:var(--panel-2);color:var(--text)}
+.btn.sm{padding:4.5px 9px;font-size:12px}
+.icon-btn{
+  width:30px;height:30px;display:grid;place-items:center;
+  border-radius:var(--r-sm);border:1px solid transparent;
+  color:var(--text-2);font-size:13px;
+  transition:background .13s ease,color .13s ease,border-color .13s ease;
+}
+.icon-btn:hover{background:var(--panel-2);color:var(--text);border-color:var(--border)}
+.kbd{
+  font-family:var(--mono);font-size:10.5px;
+  padding:2px 5px;border-radius:5px;
+  border:1px solid var(--border);background:var(--panel-2);color:var(--text-3);
+}
+
+.tag{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:2.5px 8px;border-radius:99px;
+  font-size:11px;font-weight:500;
+  background:var(--panel-2);border:1px solid var(--border);color:var(--text-2);
+  white-space:nowrap;
+}
+.tag.accent{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.tag .tdot{width:5px;height:5px;border-radius:99px;background:currentColor;opacity:.9}
+
+.label{
+  font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-3);
+}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+
+.section{margin-top:34px}
+.section:first-child{margin-top:0}
+.section-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:12px;
+}
+.section-title{font-size:13px;font-weight:600;letter-spacing:-.005em}
+.section-sub{font-size:12px;color:var(--text-3);margin-top:1px}
+
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.row{display:flex;align-items:center;gap:10px}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.muted{color:var(--text-2)}
+.dim{color:var(--text-3)}
+.tiny{font-size:11.5px}
+.sm{font-size:12.5px}
+.stack{display:flex;flex-direction:column}
+
+/* ---------- METER ---------- */
+.meter{
+  height:6px;border-radius:99px;background:var(--track);
+  overflow:hidden;position:relative;
+}
+.meter > i{
+  display:block;height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--accent),#9b7bf7);
+  transform-origin:left center;
+  animation:grow .68s cubic-bezier(.22,.8,.24,1) both;
+}
+.meter.thin{height:4px}
+.meter.thick{height:8px}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* ---------- STARS ---------- */
+.stars{display:inline-flex;gap:1.5px;font-size:11.5px;letter-spacing:.5px;line-height:1}
+.stars .on{color:var(--warn)}
+.stars .off{color:var(--track)}
+.stars.interactive{cursor:pointer}
+.stars.interactive span{transition:transform .1s ease}
+.stars.interactive span:hover{transform:scale(1.25)}
+
+/* ---------- DOT SCALE ---------- */
+.dots{display:inline-flex;gap:4px}
+.dots i{width:8px;height:8px;border-radius:99px;background:var(--track);transition:background .15s ease}
+.dots i.on{background:var(--accent)}
+.dots.interactive i{cursor:pointer;transition:background .15s ease,transform .12s ease}
+.dots.interactive i:hover{transform:scale(1.28)}
+
+/* ---------- STAT ---------- */
+.stat{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:13px 14px;
+}
+.stat-val{font-size:23px;font-weight:600;letter-spacing:-.025em;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat-lab{font-size:11.5px;color:var(--text-3);margin-top:3px}
+
+/* ---------- HERO ---------- */
+.hero{
+  background:
+    radial-gradient(120% 140% at 100% 0%, var(--accent-soft) 0%, transparent 55%),
+    var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg);
+  padding:26px 24px;
+  box-shadow:var(--shadow-sm);
+}
+.hero h1{
+  margin:0 0 8px;font-size:24px;font-weight:600;letter-spacing:-.028em;line-height:1.25;
+}
+.hero p{margin:0;color:var(--text-2);font-size:13.5px;max-width:52ch}
+
+/* ---------- DIRECTION CARD ---------- */
+.dir-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px;
+  display:flex;flex-direction:column;gap:13px;
+  transition:border-color .16s ease,background .16s ease;
+  cursor:pointer;text-align:left;width:100%;
+}
+.dir-card:hover{border-color:var(--border-strong);background:var(--panel-2)}
+.dir-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dir-emoji{
+  width:34px;height:34px;border-radius:10px;flex:0 0 34px;
+  display:grid;place-items:center;font-size:17px;
+  background:var(--panel-3);border:1px solid var(--border);
+}
+.dir-name{font-size:14.5px;font-weight:600;letter-spacing:-.012em}
+.dir-tags{font-size:11.5px;color:var(--text-3);margin-top:2px;line-height:1.4}
+.dir-score{font-size:19px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.dir-score span{font-size:11.5px;color:var(--text-3);font-weight:400}
+
+.score-row{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:9px;font-size:12px}
+.score-row .k{color:var(--text-3)}
+.score-row .v{color:var(--text-2);font-size:11px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- TIMELINE ---------- */
+.tl{display:flex;flex-direction:column;gap:0}
+.tl-item{display:grid;grid-template-columns:15px 1fr;gap:11px;position:relative;padding-bottom:15px}
+.tl-item:last-child{padding-bottom:0}
+.tl-item::before{
+  content:"";position:absolute;left:6.5px;top:16px;bottom:-2px;width:1px;
+  background:var(--border); 
+}
+.tl-item:last-child::before{display:none}
+.tl-dot{
+  width:7px;height:7px;border-radius:99px;margin-top:6px;
+  background:var(--panel);border:1.5px solid var(--border-strong);z-index:1;
+}
+.tl-item.active .tl-dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.tl-item.done .tl-dot{background:var(--text-3);border-color:var(--text-3)}
+.tl-title{font-size:12.5px;font-weight:500}
+.tl-meta{font-size:11.5px;color:var(--text-3);margin-top:1px}
+
+/* ---------- ACTIVITY ---------- */
+.act{display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1px solid var(--border)}
+.act:last-child{border-bottom:none}
+.act-date{font-size:11px;color:var(--text-3);font-family:var(--mono);flex:0 0 68px;font-variant-numeric:tabular-nums}
+.act-text{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- TASK ---------- */
+.task{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:13px 15px;border-radius:var(--r-md);
+  border:1px solid var(--border);background:var(--panel);
+  transition:border-color .15s ease,opacity .15s ease;
+}
+.task:hover{border-color:var(--border-strong)}
+.task.done{opacity:.5}
+.task.done .task-title{text-decoration:line-through;text-decoration-color:var(--text-3)}
+.check{
+  width:17px;height:17px;flex:0 0 17px;margin-top:2px;border-radius:5px;
+  border:1.5px solid var(--border-strong);display:grid;place-items:center;
+  font-size:10px;color:transparent;transition:all .14s ease;
+}
+.check.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.task-kind{
+  font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text-3);font-family:var(--mono);
+}
+.task-title{font-size:13.5px;font-weight:500;margin-top:1px;letter-spacing:-.005em}
+.task-min{font-size:11px;color:var(--text-3);font-family:var(--mono);margin-top:2px;font-variant-numeric:tabular-nums}
+
+/* ---------- CALENDAR ---------- */
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.cal-dow{
+  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-3);text-align:center;padding:5px 0;
+}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-cell{
+  min-height:74px;border-radius:var(--r-md);
+  border:1px solid var(--border);background:var(--panel);
+  padding:7px 8px;text-align:left;
+  display:flex;flex-direction:column;gap:5px;
+  transition:border-color .14s ease,background .14s ease;
+  position:relative;
+}
+.cal-cell.empty{background:transparent;border-color:transparent;pointer-events:none}
+.cal-cell.has-plan{cursor:pointer}
+.cal-cell.has-plan:hover{border-color:var(--border-strong);background:var(--panel-2)}
+.cal-cell.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft)}
+.cal-cell.today .cal-date{color:var(--accent);font-weight:600}
+.cal-cell.active{background:var(--panel-3);border-color:var(--border-strong)}
+.cal-date{font-size:11.5px;color:var(--text-3);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.cal-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10.5px;padding:2px 6px;border-radius:5px;
+  background:var(--panel-3);color:var(--text-2);
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  border:1px solid var(--border);
+}
+.cal-pill .pd{width:4px;height:4px;border-radius:99px;flex:0 0 4px}
+.cal-theme{font-size:10.5px;color:var(--text-3);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cal-today-flag{
+  position:absolute;top:6px;right:7px;
+  font-size:9px;font-weight:700;letter-spacing:.06em;
+  color:var(--accent);
+}
+
+/* ---------- TABLE ---------- */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--panel)}
+table.tbl{width:100%;border-collapse:collapse;font-size:12.5px;min-width:620px}
+table.tbl th{
+  text-align:left;padding:10px 12px;font-size:10.5px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);
+  border-bottom:1px solid var(--border);white-space:nowrap;
+  background:var(--panel-2);position:sticky;top:0;
+}
+table.tbl th.c,table.tbl td.c{text-align:center}
+table.tbl td{padding:9px 12px;border-bottom:1px solid var(--border)}
+table.tbl tr:last-child td{border-bottom:none}
+table.tbl tbody tr:hover{background:var(--panel-2)}
+.cell-score{
+  display:inline-grid;place-items:center;width:24px;height:24px;border-radius:6px;
+  font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;
+  background:var(--panel-3);color:var(--text-2);cursor:pointer;
+  transition:background .12s ease,color .12s ease;
+  border:1px solid transparent;
+}
+.cell-score:hover{border-color:var(--border-strong);color:var(--text)}
+.cell-score.hi{background:var(--accent-soft);color:var(--accent)}
+.cell-score.mid{background:rgba(232,176,78,.12);color:var(--warn)}
+
+/* ---------- FORM ---------- */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field-lab{display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:6px}
+.field-hint{font-size:11px;color:var(--text-3);margin-top:5px}
+.input,.textarea{
+  width:100%;padding:9px 11px;border-radius:var(--r-sm);
+  background:var(--panel-2);border:1px solid var(--border);
+  font-size:13px;line-height:1.55;
+  transition:border-color .14s ease,background .14s ease;
+}
+.input::placeholder,.textarea::placeholder{color:var(--text-3)}
+.input:focus,.textarea:focus{
+  outline:none;border-color:var(--accent);background:var(--panel);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.textarea{resize:vertical;min-height:74px;font-family:var(--font)}
+select.input{cursor:pointer;appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--text-3) 50%),linear-gradient(135deg,var(--text-3) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+  padding-right:30px;
+}
+
+/* ---------- EXPERIMENT ---------- */
+.exp{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.exp-title{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.exp-block{border-left:2px solid var(--border);padding-left:11px}
+.exp-block .bk{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3)}
+.exp-block .bv{font-size:12.5px;color:var(--text-2);margin-top:2px;line-height:1.5}
+
+/* ---------- CAREER ---------- */
+.career-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px;
+  display:flex;flex-direction:column;gap:11px;
+}
+.career-name{font-size:14px;font-weight:600;letter-spacing:-.01em}
+
+/* ---------- RESEARCH ---------- */
+.q-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:13px 15px;border:1px solid var(--border);border-radius:var(--r-md);
+  background:var(--panel);transition:border-color .14s ease;
+}
+.q-item:hover{border-color:var(--border-strong)}
+.q-text{font-size:13.5px;line-height:1.5;letter-spacing:-.005em}
+.status-pill{
+  font-size:10.5px;padding:2.5px 8px;border-radius:99px;font-weight:500;
+  border:1px solid var(--border);background:var(--panel-2);color:var(--text-2);
+  white-space:nowrap;flex:0 0 auto;
+}
+.status-pill.s-curious{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+.status-pill.s-doing{color:var(--warn);background:rgba(232,176,78,.12);border-color:transparent}
+.status-pill.s-done{color:var(--ok);background:rgba(78,203,139,.12);border-color:transparent}
+
+/* ---------- DECISION TREE ---------- */
+.tree{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;overflow-x:auto}
+.tree-node{
+  border:1px solid var(--border-strong);background:var(--panel);
+  border-radius:var(--r-md);padding:9px 15px;text-align:center;
+  box-shadow:var(--shadow-sm);
+}
+.tree-root{border-color:var(--accent);background:var(--accent-soft)}
+.tree-root .tn-title{color:var(--accent);font-weight:600}
+.tn-title{font-size:13px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.tn-sub{font-size:11px;color:var(--text-3);margin-top:2px;white-space:nowrap}
+.tree-vline{width:1px;height:20px;background:var(--border-strong)}
+.tree-branch{display:flex;gap:34px;position:relative;padding-top:20px}
+.tree-branch::before{
+  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:calc(100% - 120px);height:1px;background:var(--border-strong);
+}
+.tree-branch::after{
+  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:1px;height:20px;background:var(--border-strong);
+}
+.tree-col{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;padding-top:20px}
+.tree-col::before{
+  content:"";position:absolute;top:0;left:50%;width:1px;height:20px;background:var(--border-strong);
+}
+
+/* ---------- TOP3 ---------- */
+.rank-card{
+  display:flex;align-items:center;gap:14px;
+  border:1px solid var(--border);border-radius:var(--r-lg);
+  background:var(--panel);padding:15px 16px;
+}
+.rank-num{
+  font-size:11px;font-weight:700;font-family:var(--mono);
+  color:var(--text-3);letter-spacing:.06em;flex:0 0 30px;
+}
+.rank-card.top1{border-color:var(--accent-line);background:linear-gradient(120deg,var(--accent-soft),transparent 60%),var(--panel)}
+.rank-card.top1 .rank-num{color:var(--accent)}
+
+/* ---------- EMPTY ---------- */
+.empty{
+  border:1px dashed var(--border-strong);border-radius:var(--r-md);
+  padding:26px;text-align:center;color:var(--text-3);font-size:12.5px;
+}
+
+/* ---------- CMDK ---------- */
+.cmdk{
+  position:fixed;inset:0;z-index:100;display:none;
+  align-items:flex-start;justify-content:center;
+  padding-top:14vh;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);
+}
+.cmdk.open{display:flex}
+.cmdk-box{
+  width:min(520px,92vw);border-radius:var(--r-lg);
+  border:1px solid var(--border-strong);background:var(--panel);
+  box-shadow:0 24px 60px -12px rgba(0,0,0,.7);
+  overflow:hidden;animation:pop .16s cubic-bezier(.2,.9,.3,1.1);
+}
+@keyframes pop{from{opacity:0;transform:translateY(-6px) scale(.985)}to{opacity:1;transform:none}}
+.cmdk-input{
+  width:100%;padding:15px 17px;border:none;background:transparent;
+  font-size:14.5px;border-bottom:1px solid var(--border);
+}
+.cmdk-input:focus{outline:none}
+.cmdk-list{max-height:320px;overflow-y:auto;padding:6px}
+.cmdk-item{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:9px 11px;border-radius:var(--r-sm);font-size:13px;color:var(--text-2);
+  text-align:left;
+}
+.cmdk-item:hover,.cmdk-item.sel{background:var(--panel-2);color:var(--text)}
+.cmdk-item .ci-ico{width:16px;text-align:center;font-size:12px;opacity:.8}
+.cmdk-item .ci-hint{margin-left:auto;font-size:11px;color:var(--text-3);font-family:var(--mono)}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:900px){
+  .sidebar{
+    position:fixed;left:0;top:0;z-index:60;
+    transform:translateX(-101%);
+    transition:transform .24s cubic-bezier(.3,.8,.3,1);
+    box-shadow:0 0 40px rgba(0,0,0,.5);
+  }
+  .app.nav-open .sidebar{transform:none}
+  .app.nav-open .scrim{opacity:1;pointer-events:auto}
+  .view{padding:20px 15px 80px}
+  .topbar{padding:11px 15px}
+  .hero{padding:20px 18px}
+  .hero h1{font-size:20px}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:1fr}
+  .g2{grid-template-columns:1fr}
+  .cal-cell{min-height:60px;padding:5px 6px}
+  .cal-theme{display:none}
+  .crumb-sub{display:none}
+  .tree-branch{gap:16px}
+}
+@media (max-width:520px){
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat-val{font-size:20px}
+  .cal-grid{gap:4px}
+  .cal-head{gap:4px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .meter > i{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">E</div>
+      <div class="brand-text">
+        <div class="brand-title">Explorer</div>
+        <div class="brand-sub">WEEK 01 / 04</div>
+      </div>
+    </div>
+
+    <nav id="nav">
+      <div class="nav-group">
+        <div class="nav-label">Overview</div>
+        <button class="nav-item" data-route="dashboard"><span class="nav-dot"></span><span class="nav-ico">◉</span>Dashboard</button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Explore</div>
+        <button class="nav-item" data-route="today"><span class="nav-dot"></span><span class="nav-ico">☀</span>今日探索</button>
+        <button class="nav-item" data-route="calendar"><span class="nav-dot"></span><span class="nav-ico">▦</span>月历</button>
+        <button class="nav-item" data-route="experiments"><span class="nav-dot"></span><span class="nav-ico">⚗</span>实验项目<span class="nav-count" id="navExpCount">0</span></button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Directions</div>
+        <button class="nav-item" data-route="directions"><span class="nav-dot"></span><span class="nav-ico">◇</span>方向矩阵<span class="nav-count" id="navDirCount">0</span></button>
+        <button class="nav-item" data-route="career"><span class="nav-dot"></span><span class="nav-ico">⌘</span>职业地图</button>
+        <button class="nav-item" data-route="research"><span class="nav-dot"></span><span class="nav-ico">?</span>研究问题<span class="nav-count" id="navQCount">0</span></button>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Decision</div>
+        <button class="nav-item" data-route="decision"><span class="nav-dot"></span><span class="nav-ico">▲</span>最终决策</button>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="journey">
+        <div class="journey-head"><span>4 Week Journey</span><span id="journeyPct" class="mono">0%</span></div>
+        <div id="journeyList"></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="scrim" id="scrim" data-action="close-nav"></div>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn" data-action="toggle-nav" aria-label="打开导航" style="display:none" id="menuBtn">☰</button>
+      <div class="crumb">
+        <span class="crumb-title" id="crumbTitle">Dashboard</span>
+        <span class="crumb-sub" id="crumbSub"></span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn ghost sm" data-action="palette">
+          <span>搜索</span><span class="kbd">⌘K</span>
+        </button>
+        <button class="icon-btn" data-action="toggle-theme" id="themeBtn" aria-label="切换主题">◐</button>
+      </div>
+    </header>
+    <div class="view" id="view"></div>
+  </main>
+</div>
+
+<!-- ================= COMMAND PALETTE ================= -->
+<div class="cmdk" id="cmdk" data-action="palette-close">
+  <div class="cmdk-box" onclick="event.stopPropagation()">
+    <input class="cmdk-input" id="cmdkInput" placeholder="跳转到页面或方向…" autocomplete="off" spellcheck="false">
+    <div class="cmdk-list" id="cmdkList"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   0. UTILITIES
+   ============================================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+
+function pad2(n){ return String(n).padStart(2, '0'); }
+function isoOf(d){ return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function parseISO(s){ const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+const TODAY = isoOf(new Date());
+function daysBetween(a, b){ return Math.round((parseISO(b) - parseISO(a)) / 86400000); }
+function prettyDate(s){
+  const d = parseISO(s);
+  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+}
+function prettyFull(s){
+  const d = parseISO(s);
+  const wd = ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+  return `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日 · ${wd}`;
+}
+function starsHTML(v, interactive, attrs){
+  let h = `<span class="stars${interactive ? ' interactive' : ''}" ${attrs || ''}>`;
+  for (let i = 1; i <= 5; i++) h += `<span class="${i <= Math.round(v) ? 'on' : 'off'}">★</span>`;
+  return h + '</span>';
+}
+function dotsHTML(v, interactive, attrs){
+  let h = `<span class="dots${interactive ? ' interactive' : ''}" ${attrs || ''}>`;
+  for (let i = 1; i <= 5; i++) h += `<i class="${i <= v ? 'on' : ''}" data-value="${i}"></i>`;
+  return h + '</span>';
+}
+function meterHTML(pct, cls){
+  return `<div class="meter ${cls || ''}"><i style="width:${clamp(pct,0,100)}%"></i></div>`;
+}
+
+/* ============================================================
+   1. DIRECTION COLORS
+   ============================================================ */
+const DIR_COLOR = {
+  ai:'#6f7bf7', product:'#e879a8', cv:'#4ea8de', vision3d:'#5b9df5',
+  graphics:'#b17ee8', xr:'#3fc7bd', robotics:'#e8a34e', display:'#5fbf7a',
+  review:'#8a8f98', build:'#6f7bf7', career:'#e879a8', decide:'#6f7bf7', next:'#8a8f98'
+};
+const dirColor = id => DIR_COLOR[id] || 'var(--text-3)';
+
+/* ============================================================
+   2. STATIC PLAN  (4 weeks)
+   ============================================================ */
+const PLAN = {
+  /* ---- Week 1 · Map the Territory ---- */
+  '2026-09-07': { dir:'ai', label:'AI', theme:'AI 全景地图', tasks:[
+    { k:'Learn', t:'读一篇 AI 工程综述，列出 10 个子领域', m:30 },
+    { k:'Build', t:'跑通一个 LLM API demo，改 3 个参数', m:90 },
+    { k:'Reflect', t:'我对「模型」还是「产品」更兴奋？', m:10 } ] },
+  '2026-09-08': { dir:'ai', label:'AI', theme:'AI Product', tasks:[
+    { k:'Learn', t:'拆解 3 个 AI 产品的真实交互', m:30 },
+    { k:'Build', t:'做一个最小 AI 工作流原型', m:90 },
+    { k:'Reflect', t:'这个方向我愿意做 3 年吗？', m:10 } ] },
+  '2026-09-09': { dir:'cv', label:'CV', theme:'Computer Vision', tasks:[
+    { k:'Learn', t:'卷积 / 特征 / 检测的基本脉络', m:30 },
+    { k:'Build', t:'跑一个预训练检测模型，换自己的图', m:90 },
+    { k:'Reflect', t:'视觉任务的哪一部分最吸引我？', m:10 } ] },
+  '2026-09-10': { dir:'vision3d', label:'3D', theme:'3D Vision 入门', tasks:[
+    { k:'Learn', t:'相机模型、内外参、极线几何', m:40 },
+    { k:'Build', t:'用 OpenCV 做一次双目深度估计', m:80 },
+    { k:'Reflect', t:'数学让我兴奋还是痛苦？', m:10 } ] },
+  '2026-09-11': { dir:'graphics', label:'Graphics', theme:'Graphics 一瞥', tasks:[
+    { k:'Learn', t:'光栅化管线：顶点 → 片元 → 像素', m:30 },
+    { k:'Build', t:'写第一个能动的 shader', m:90 },
+    { k:'Reflect', t:'渲染的哪一步让我想继续？', m:10 } ] },
+  '2026-09-12': { dir:'xr', label:'XR', theme:'XR / Spatial', tasks:[
+    { k:'Learn', t:'AR / VR / MR 的技术边界', m:30 },
+    { k:'Build', t:'做一个 WebXR 最小场景', m:80 },
+    { k:'Reflect', t:'XR 是真需求还是概念？', m:10 } ] },
+  '2026-09-13': { dir:'review', label:'Review', theme:'Week 1 复盘', tasks:[
+    { k:'Reflect', t:'写出本周最兴奋的 3 个瞬间', m:20 },
+    { k:'Reflect', t:'更新方向矩阵的分数', m:20 } ] },
+
+  /* ---- Week 2 · Build & Break ---- */
+  '2026-09-14': { dir:'build', label:'Build', theme:'Gaussian Splatting', tasks:[
+    { k:'Learn', t:'3DGS 为什么比 NeRF 快', m:30 },
+    { k:'Build', t:'用手机照片训练一个 3DGS 场景', m:120 },
+    { k:'Reflect', t:'环境配置的痛苦 vs 看到结果的爽', m:10 } ] },
+  '2026-09-15': { dir:'build', label:'Build', theme:'NeRF 复现', tasks:[
+    { k:'Learn', t:'体渲染与位置编码', m:30 },
+    { k:'Build', t:'复现一个最小 NeRF', m:120 },
+    { k:'Reflect', t:'我是在享受过程还是只想看到结果？', m:10 } ] },
+  '2026-09-16': { dir:'build', label:'Build', theme:'Shader 入门', tasks:[
+    { k:'Learn', t:'GLSL 基础语法与坐标空间', m:30 },
+    { k:'Build', t:'写一个实时光照材质', m:100 },
+    { k:'Reflect', t:'图形学的手感如何？', m:10 } ] },
+  '2026-09-17': { dir:'product', label:'Agent', theme:'Agent 实验', tasks:[
+    { k:'Learn', t:'Tool use / Planning / Memory 三件事', m:30 },
+    { k:'Build', t:'做一个能查资料并写报告的 Agent', m:110 },
+    { k:'Reflect', t:'我更想做模型还是做调度？', m:10 } ] },
+  '2026-09-18': { dir:'product', label:'Product', theme:'AI 产品原型', tasks:[
+    { k:'Learn', t:'一个 AI 产品的 5 个关键决策', m:20 },
+    { k:'Build', t:'给自己的痛点做一个小工具', m:110 },
+    { k:'Reflect', t:'用户反馈会让我兴奋吗？', m:10 } ] },
+  '2026-09-19': { dir:'graphics', label:'Graphics', theme:'渲染管线', tasks:[
+    { k:'Learn', t:'延迟渲染 / 前向渲染的区别', m:30 },
+    { k:'Build', t:'实现一个多光源场景', m:100 },
+    { k:'Reflect', t:'工程复杂度是否劝退我？', m:10 } ] },
+  '2026-09-20': { dir:'review', label:'Review', theme:'Week 2 复盘', tasks:[
+    { k:'Reflect', t:'哪个实验让我忘记看时间？', m:20 },
+    { k:'Reflect', t:'更新方向矩阵', m:20 } ] },
+
+  /* ---- Week 3 · Try the Work ---- */
+  '2026-09-21': { dir:'career', label:'Career', theme:'AI Engineer 的一天', tasks:[
+    { k:'Learn', t:'读 3 份 AI Engineer JD，圈出重复要求', m:30 },
+    { k:'Build', t:'模拟：给一个模型加 eval 与监控', m:90 },
+    { k:'Reflect', t:'这份工作的日常我受得了吗？', m:15 } ] },
+  '2026-09-22': { dir:'career', label:'Career', theme:'3D Vision Engineer 的一天', tasks:[
+    { k:'Learn', t:'看一个 3D 重建项目的工作流', m:30 },
+    { k:'Build', t:'模拟：把重建结果接进一个可视化工具', m:90 },
+    { k:'Reflect', t:'我更喜欢算法还是管线？', m:15 } ] },
+  '2026-09-23': { dir:'career', label:'Career', theme:'Graphics Engineer 的一天', tasks:[
+    { k:'Learn', t:'引擎里图形工程师的真实任务', m:30 },
+    { k:'Build', t:'模拟：优化一个渲染 pass 的性能', m:90 },
+    { k:'Reflect', t:'性能优化的爽感 vs 枯燥感', m:15 } ] },
+  '2026-09-24': { dir:'vision3d', label:'Vision', theme:'Stereo 深入', tasks:[
+    { k:'Learn', t:'代价体 / 视差 / 亚像素', m:40 },
+    { k:'Build', t:'自己实现一个块匹配深度图', m:90 },
+    { k:'Reflect', t:'推导和调参哪个更让我投入？', m:10 } ] },
+  '2026-09-25': { dir:'graphics', label:'Graphics', theme:'实时光照', tasks:[
+    { k:'Learn', t:'PBR 的核心直觉', m:30 },
+    { k:'Build', t:'实现一个 PBR 材质球', m:100 },
+    { k:'Reflect', t:'视觉反馈对我有多重要？', m:10 } ] },
+  '2026-09-26': { dir:'xr', label:'XR', theme:'WebXR Demo', tasks:[
+    { k:'Learn', t:'空间交互的设计约束', m:30 },
+    { k:'Build', t:'做一个可抓取的 WebXR 物体', m:100 },
+    { k:'Reflect', t:'XR 离「有用」还有多远？', m:10 } ] },
+  '2026-09-27': { dir:'review', label:'Review', theme:'Week 3 复盘', tasks:[
+    { k:'Reflect', t:'模拟职业里哪个最像「我」？', m:20 },
+    { k:'Reflect', t:'更新方向矩阵', m:20 } ] },
+
+  /* ---- Week 4 · Decide ---- */
+  '2026-09-28': { dir:'decide', label:'Decide', theme:'整理证据', tasks:[
+    { k:'Reflect', t:'把 4 周的实验结论汇总成一张表', m:40 } ] },
+  '2026-09-29': { dir:'decide', label:'Decide', theme:'方向矩阵终评', tasks:[
+    { k:'Reflect', t:'给每个方向重新打分并写理由', m:40 } ] },
+  '2026-09-30': { dir:'decide', label:'Decide', theme:'写决策文档', tasks:[
+    { k:'Reflect', t:'当前假设 / 最大不确定性 / 下一步', m:50 } ] },
+  '2026-10-01': { dir:'next', label:'Next', theme:'设计下一个实验', tasks:[
+    { k:'Reflect', t:'下一个 4–8 周验证什么？', m:40 } ] },
+  '2026-10-02': { dir:'next', label:'Next', theme:'资源与路径', tasks:[
+    { k:'Learn', t:'列出需要的课程 / 项目 / 人脉', m:40 } ] },
+  '2026-10-03': { dir:'next', label:'Next', theme:'缓冲', tasks:[
+    { k:'Reflect', t:'补上前面欠下的实验', m:60 } ] },
+  '2026-10-04': { dir:'review', label:'Review', theme:'总复盘', tasks:[
+    { k:'Reflect', t:'4 周前后，我变了什么？', m:40 } ] }
+};
+
+const WEEKS = [
+  { n:1, name:'Map the Territory', from:'2026-09-07', to:'2026-09-13' },
+  { n:2, name:'Build & Break',      from:'2026-09-14', to:'2026-09-20' },
+  { n:3, name:'Try the Work',       from:'2026-09-21', to:'2026-09-27' },
+  { n:4, name:'Decide',             from:'2026-09-28', to:'2026-10-04' }
+];
+
+/* ============================================================
+   3. DEFAULT STATE
+   ============================================================ */
+const SCORE_KEYS = [
+  { k:'interest',  label:'兴趣' },
+  { k:'curiosity', label:'好奇' },
+  { k:'continue',  label:'想继续' },
+  { k:'build',     label:'动手' },
+  { k:'math',      label:'数学' },
+  { k:'research',  label:'研究' },
+  { k:'product',   label:'产品' },
+  { k:'career',    label:'职业' }
+];
+
+function defaultState(){
+  return {
+    theme: 'dark',
+    startDate: '2026-09-07',
+    activeDay: (PLAN[TODAY] ? TODAY : '2026-09-11'),
+    calView: { y: 2026, m: 8 },
+    directions: [
+      { id:'vision3d', name:'3D Vision', emoji:'🧠',
+        tags:['Computer Vision','Reconstruction','NeRF','Gaussian Splatting'],
+        blurb:'如何从 2D 图像真正理解 3D 世界。',
+        scores:{ interest:5, curiosity:5, continue:5, build:5, math:4, research:5, product:3, career:5 },
+        log:[
+          { d:'2026-09-11', t:'3D Gaussian Splatting 小实验：第一次看到自己生成的场景' },
+          { d:'2026-09-09', t:'Stereo Vision 深度图，调参调到怀疑人生但很有感觉' }
+        ] },
+      { id:'ai', name:'AI Engineering', emoji:'⚡',
+        tags:['LLM','Agent','RAG','Multimodal'],
+        blurb:'把模型变成能用的东西，而不是只跑 benchmark。',
+        scores:{ interest:5, curiosity:4, continue:4, build:5, math:3, research:4, product:4, career:5 },
+        log:[ { d:'2026-09-07', t:'跑通 LLM API，理解 temperature 的真实影响' } ] },
+      { id:'product', name:'AI Product', emoji:'🎯',
+        tags:['AI Application','Agent','UX'],
+        blurb:'AI 能力与真实用户痛点之间的那层翻译。',
+        scores:{ interest:5, curiosity:4, continue:4, build:5, math:2, research:3, product:5, career:5 },
+        log:[ { d:'2026-09-08', t:'拆解 3 个 AI 产品的交互，发现很多只是套壳' } ] },
+      { id:'xr', name:'XR / Spatial', emoji:'🥽',
+        tags:['AR','VR','Spatial Computing'],
+        blurb:'把计算放进真实空间里，交互问题比渲染问题更难。',
+        scores:{ interest:4, curiosity:5, continue:4, build:4, math:3, research:4, product:4, career:4 },
+        log:[] },
+      { id:'graphics', name:'Graphics', emoji:'🎨',
+        tags:['Rendering','Shader','Geometry','Simulation'],
+        blurb:'在有限算力里造出可信的视觉世界。',
+        scores:{ interest:4, curiosity:4, continue:4, build:5, math:5, research:4, product:2, career:4 },
+        log:[] },
+      { id:'display', name:'Computational Display', emoji:'🔬',
+        tags:['三维显示','Light Field','Holographic'],
+        blurb:'光学、感知与计算的交叉地带。',
+        scores:{ interest:4, curiosity:4, continue:3, build:3, math:4, research:4, product:2, career:3 },
+        log:[] },
+      { id:'robotics', name:'Robotics', emoji:'🤖',
+        tags:['Perception','Embodied AI'],
+        blurb:'让智能体在物理世界里做事。',
+        scores:{ interest:3, curiosity:4, continue:3, build:3, math:4, research:4, product:2, career:3 },
+        log:[] }
+    ],
+    experiments: [
+      { id:'x1', title:'Gaussian Splatting 小实验', dir:'vision3d', status:'done', date:'2026-09-11',
+        hyp:'能不能用手机拍的几十张照片重建出一个可以自由旋转的场景？',
+        problem:'CUDA 与 PyTorch 版本冲突，环境配了 3 小时。',
+        result:'终于跑通，第一次看到自己生成的 3D 场景。',
+        reflect:'配置环境极其痛苦，但看到结果的一瞬间全值了。我可能真的喜欢 3D Vision。',
+        score:5 },
+      { id:'x2', title:'AI Product 原型', dir:'product', status:'done', date:'2026-09-08',
+        hyp:'给自己做一个真正会用的小工具，能坚持用超过 3 天吗？',
+        problem:'功能想太多，第一版做了两天没做完。',
+        result:'砍到只剩一个功能后，确实每天都用。',
+        reflect:'我享受「有人真的在用」的感觉，超过享受模型本身。',
+        score:4 },
+      { id:'x3', title:'Stereo Vision 深度图', dir:'vision3d', status:'done', date:'2026-09-09',
+        hyp:'自己实现块匹配，能不能得到可用的深度图？',
+        problem:'纹理稀疏区域全是空洞，参数怎么调都不对。',
+        result:'调了 40 分钟参数后勉强可用。',
+        reflect:'调参让我烦躁，但推导几何关系让我很投入。',
+        score:4 },
+      { id:'x4', title:'Shader 第一课', dir:'graphics', status:'planned', date:'',
+        hyp:'写一个能动的东西，会不会比调模型更有成就感？',
+        problem:'', result:'', reflect:'', score:0 }
+    ],
+    career: [
+      { id:'c1', name:'AI Engineer', dir:'ai', fit:4,
+        real:'把模型接进产品：调 prompt、做 eval、搭检索管线、盯延迟和成本。',
+        tryIt:'用 2 小时给一个开源模型接上你自己的数据，并写 5 条测试用例。' },
+      { id:'c2', name:'3D Vision Engineer', dir:'vision3d', fit:5,
+        real:'做重建、标定、深度估计，把算法跑在真实设备和真实数据上。',
+        tryIt:'用手机拍一组照片，完整跑一次重建并导出可交互模型。' },
+      { id:'c3', name:'Graphics Engineer', dir:'graphics', fit:4,
+        real:'写渲染管线、优化性能、实现光照与材质，为画面效果负责。',
+        tryIt:'实现一个 PBR 材质球，并用性能分析工具找出瓶颈。' },
+      { id:'c4', name:'Applied Scientist', dir:'vision3d', fit:4,
+        real:'一半读论文一半写代码，把新方法落到真实问题上。',
+        tryIt:'复现一篇近半年的论文，记录卡住的每一步。' },
+      { id:'c5', name:'XR Engineer', dir:'xr', fit:3,
+        real:'做空间交互、追踪与渲染，处理真实世界的各种不完美。',
+        tryIt:'做一个能抓取物体的 WebXR 场景，测试 30 分钟。' },
+      { id:'c6', name:'AI Product Manager', dir:'product', fit:4,
+        real:'定义问题、判断优先级、在能力边界内做取舍。',
+        tryIt:'给你熟悉的 3 个 AI 产品各写一份改进提案。' },
+      { id:'c7', name:'Researcher / PhD', dir:'vision3d', fit:3,
+        real:'长期面对不确定问题，大量阅读、推导与失败实验。',
+        tryIt:'花 4 小时只读论文不写代码，看自己是否坐得住。' },
+      { id:'c8', name:'Display / Optics Engineer', dir:'display', fit:3,
+        real:'光学设计、显示系统、计算成像，软硬件结合。',
+        tryIt:'读一篇计算显示综述，画出它的核心光学链路。' }
+    ],
+    research: [
+      { q:'如何从 2D 图像真正理解 3D 世界？', dir:'vision3d', status:'curious' },
+      { q:'3D Gaussian Splatting 为什么有效，它的边界在哪？', dir:'vision3d', status:'doing' },
+      { q:'AI 和 3D Vision 结合的下一个突破点是什么？', dir:'vision3d', status:'curious' },
+      { q:'AR 中最困难的问题到底是显示、追踪还是交互？', dir:'xr', status:'curious' },
+      { q:'三维显示的未来方向是光场还是全息？', dir:'display', status:'curious' },
+      { q:'AI 能不能和计算显示结合，做出真正的裸眼 3D？', dir:'display', status:'curious' },
+      { q:'Agent 的可靠性瓶颈是模型能力还是系统设计？', dir:'product', status:'curious' }
+    ],
+    daily: {},
+    decision: { hypothesis:'', uncertainty:'', next:'' }
+  };
+}
+
+/* ============================================================
+   4. STORE
+   ============================================================ */
+const KEY = 'obsidian-explorer-v1';
+let S;
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    const base = defaultState();
+    return Object.assign(base, parsed, {
+      calView: Object.assign(base.calView, parsed.calView || {}),
+      decision: Object.assign(base.decision, parsed.decision || {})
+    });
+  } catch(e){
+    console.warn('状态读取失败，使用默认值', e);
+    return defaultState();
+  }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch(e){ console.warn('状态保存失败', e); }
+}
+
+/* ---- helpers over state ---- */
+function dirById(id){ return S.directions.find(d => d.id === id); }
+function dirScore(d){
+  const vals = SCORE_KEYS.map(x => d.scores[x.k] || 0);
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+function sortedDirections(){
+  return S.directions.slice().sort((a, b) => dirScore(b) - dirScore(a));
+}
+function getDay(date){
+  if (!S.daily[date]) S.daily[date] = { done:{}, discover:'', best:'', worst:'', keep:0, conclusion:'' };
+  return S.daily[date];
+}
+function allActivity(){
+  const items = [];
+  S.directions.forEach(d => (d.log || []).forEach(l => items.push({ d:l.d, t:l.t, dir:d.id })));
+  S.experiments.forEach(x => {
+    if (x.date) items.push({ d:x.date, t:x.title, dir:x.dir });
+  });
+  items.sort((a, b) => b.d.localeCompare(a.d));
+  return items.slice(0, 8);
+}
+function experimentCount(){ return S.experiments.length; }
+function activeDirectionCount(){ return S.directions.filter(d => dirScore(d) >= 4).length; }
+
+/* ============================================================
+   5. ROUTER
+   ============================================================ */
+function parseHash(){
+  const h = location.hash.replace(/^#\/?/, '');
+  const parts = h.split('/').filter(Boolean);
+  return { name: parts[0] || 'dashboard', param: parts.slice(1).join('/') };
+}
+function go(hash){ location.hash = hash; }
+
+const TITLES = {
+  dashboard:  ['Dashboard', '找到一个值得投入 3 年的方向'],
+  today:      ['今日探索', '今天干什么'],
+  calendar:   ['月历', '4 周探索计划'],
+  experiments:['实验项目', '用真实动手验证兴趣'],
+  directions: ['方向矩阵', '用证据打分，不靠感觉'],
+  direction:  ['方向详情', ''],
+  career:     ['职业地图', '先模拟工作，再决定专业'],
+  research:   ['研究问题池', '从学科名称进入具体问题'],
+  decision:   ['最终决策', '基于证据的暂时决策']
+};
+
+function render(){
+  const { name, param } = parseHash();
+  const view = $('#view');
+
+  let html = '';
+  switch(name){
+    case 'today':       html = renderToday(); break;
+    case 'calendar':    html = renderCalendar(); break;
+    case 'experiments': html = renderExperiments(); break;
+    case 'directions':  html = renderDirections(); break;
+    case 'direction':   html = renderDirectionDetail(param); break;
+    case 'career':      html = renderCareer(); break;
+    case 'research':    html = renderResearch(); break;
+    case 'decision':    html = renderDecision(); break;
+    default:            html = renderDashboard();
+  }
+  view.innerHTML = html;
+
+  // crumb
+  const t = TITLES[name] || TITLES.dashboard;
+  $('#crumbTitle').textContent = t[0];
+  let sub = t[1];
+  if (name === 'direction'){
+    const d = dirById(param);
+    sub = d ? d.tags.join(' · ') : '';
+    $('#crumbTitle').textContent = d ? d.name : '方向详情';
+  }
+  $('#crumbSub').textContent = sub;
+
+  // nav highlight
+  $$('#nav .nav-item').forEach(b => {
+    const r = b.dataset.route;
+    const on = (r === name) || (name === 'direction' && r === 'directions');
+    if (on) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  });
+
+  // counts
+  $('#navExpCount').textContent = experimentCount();
+  $('#navDirCount').textContent = S.directions.length;
+  $('#navQCount').textContent = S.research.length;
+
+  // close mobile nav
+  $('#app').classList.remove('nav-open');
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+/* ============================================================
+   6. SIDEBAR JOURNEY
+   ============================================================ */
+function renderJourney(){
+  const pct = Math.round(weekProgress() * 100);
+  $('#journeyPct').textContent = pct + '%';
+  $('#journeyList').innerHTML = WEEKS.map(w => {
+    const done = TODAY > w.to;
+    const active = TODAY >= w.from && TODAY <= w.to;
+    const cls = done ? 'is-done' : (active ? 'is-active' : '');
+    return `<div class="week-row ${cls}">
+      <span class="week-dot"></span>
+      <span class="week-name">WEEK ${w.n}</span>
+      <span style="margin-left:auto;font-size:11px;opacity:.8">${esc(w.name)}</span>
+    </div>`;
+  }).join('');
+}
+function weekProgress(){
+  const start = parseISO(S.startDate);
+  const elapsed = daysBetween(S.startDate, TODAY);
+  return clamp(elapsed / 28, 0, 1);
+}
+
+/* ============================================================
+   7. PAGES
+   ============================================================ */
+
+/* ---------- DASHBOARD ---------- */
+function renderDashboard(){
+  const elapsed = Math.max(1, daysBetween(S.startDate, TODAY) + 1);
+  const expN = experimentCount();
+  const dirN = activeDirectionCount();
+
+  // current exploration = top direction
+  const top = sortedDirections()[0];
+  const topScore = dirScore(top);
+  const topPct = Math.round(topScore / 5 * 100);
+
+  const todayPlan = PLAN[S.activeDay] || PLAN['2026-09-11'];
+  const todayDir = dirById(todayPlan.dir) || top;
+
+  const ranked = sortedDirections().slice(0, 5);
+  const activity = allActivity();
+
+  const expCards = S.experiments.slice(0, 2).map(x => expCardHTML(x)).join('');
+
+  return `
+  <section class="hero">
+    <h1>🌌Per aspera ad astra.</h1>
+    <p>实验、记录、判断。</p>
+  </section>
+
+  <div class="grid g3" style="margin-top:14px">
+    <div class="stat">
+      <div class="stat-val">${elapsed}</div>
+      <div class="stat-lab">探索天数</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">${expN}</div>
+      <div class="stat-lab">实验项目</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">${dirN}</div>
+      <div class="stat-lab">候选方向</div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Current Exploration</div>
+        <div class="section-sub">当前投入最多的方向</div>
+      </div>
+      <span class="tag accent"><span class="tdot"></span>Exploring</span>
+    </div>
+    <div class="card pad-lg">
+      <div class="spread" style="align-items:flex-start">
+        <div class="row" style="gap:12px">
+          <div class="dir-emoji">${todayDir.emoji || '🧠'}</div>
+          <div>
+            <div class="dir-name">${esc(top.name)}</div>
+            <div class="dir-tags">${esc(top.tags.slice(0,3).join(' · '))}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="dir-score">${topScore.toFixed(1)}<span> / 5</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        ${meterHTML(topPct, 'thick')}
+        <div class="spread" style="margin-top:7px">
+          <span class="tiny dim">方向置信度</span>
+          <span class="tiny mono dim">${topPct}%</span>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px">
+        <div class="card flat" style="background:var(--panel-2);padding:13px 14px">
+          <div class="label">今天</div>
+          <div class="sm" style="margin-top:4px;font-weight:500">${esc(todayPlan.theme)}</div>
+        </div>
+        <div class="card flat" style="background:var(--panel-2);padding:13px 14px">
+          <div class="label">状态</div>
+          <div class="sm" style="margin-top:4px;font-weight:500">非常想继续</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:16px;gap:8px">
+        <button class="btn primary" data-route="today">进入今日任务 →</button>
+        <button class="btn ghost" data-route="direction/${top.id}">查看探索记录</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Your Directions</div>
+        <div class="section-sub">分数会随实验不断更新，不是第一天填的</div>
+      </div>
+      <button class="btn ghost sm" data-route="directions">全部 →</button>
+    </div>
+    <div class="card">
+      ${ranked.map(d => {
+        const sc = dirScore(d);
+        const pct = Math.round(sc / 5 * 100);
+        return `<div style="padding:11px 0;border-bottom:1px solid var(--border)" class="dash-dir">
+          <div class="spread" style="margin-bottom:7px">
+            <div class="row" style="gap:8px">
+              <span style="width:6px;height:6px;border-radius:99px;background:${dirColor(d.id)}"></span>
+              <span class="sm" style="font-weight:500">${esc(d.name)}</span>
+            </div>
+            <span class="sm mono dim">${sc.toFixed(1)} <span style="color:var(--warn)">★</span></span>
+          </div>
+          ${meterHTML(pct, 'thin')}
+        </div>`;
+      }).join('').replace(/border-bottom:1px solid var\(--border\)"(?=[^]*?$)/, '')}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Recent Activity</div>
+        <div class="section-sub">最近 8 条探索记录</div>
+      </div>
+    </div>
+    <div class="card">
+      ${activity.length ? activity.map(a => `
+        <div class="act">
+          <span class="act-date">${a.d === TODAY ? 'Today' : prettyDate(a.d)}</span>
+          <span class="act-text">${esc(a.t)}</span>
+          <span style="margin-left:auto;width:6px;height:6px;border-radius:99px;background:${dirColor(a.dir)};flex:0 0 6px"></span>
+        </div>`).join('') : '<div class="empty">还没有记录，去今日探索写下第一条</div>'}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">4 Week Journey</div>
+        <div class="section-sub">Map → Build → Try → Decide</div>
+      </div>
+      <button class="btn ghost sm" data-route="calendar">月历 →</button>
+    </div>
+    <div class="card">
+      <div class="tl">
+        ${WEEKS.map(w => {
+          const done = TODAY > w.to;
+          const active = TODAY >= w.from && TODAY <= w.to;
+          return `<div class="tl-item ${active ? 'active' : (done ? 'done' : '')}">
+            <span class="tl-dot"></span>
+            <div>
+              <div class="tl-title">Week ${w.n} · ${esc(w.name)}</div>
+              <div class="tl-meta">${prettyDate(w.from)} – ${prettyDate(w.to)}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">Experiments</div>
+        <div class="section-sub">重点不是学习，是动手</div>
+      </div>
+      <button class="btn ghost sm" data-route="experiments">全部 →</button>
+    </div>
+    <div class="grid g2">
+      ${expCards || '<div class="empty">还没有实验</div>'}
+    </div>
+  </section>
+  `;
+}
+
+/* ---------- TODAY ---------- */
+function renderToday(){
+  const date = S.activeDay || TODAY;
+  const plan = PLAN[date];
+  const day = getDay(date);
+  const dir = plan ? dirById(plan.dir) : null;
+
+  const tasksHTML = plan ? plan.tasks.map((t, i) => {
+    const done = !!day.done[i];
+    return `<div class="task ${done ? 'done' : ''}" data-action="toggle-task" data-date="${date}" data-idx="${i}" role="button" tabindex="0">
+      <span class="check ${done ? 'on' : ''}">✓</span>
+      <div style="min-width:0">
+        <div class="task-kind">${pad2(i+1)} · ${esc(t.k)}</div>
+        <div class="task-title">${esc(t.t)}</div>
+        <div class="task-min">${t.m} min</div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">这一天没有安排任务</div>';
+
+  const totalMin = plan ? plan.tasks.reduce((a, b) => a + b.m, 0) : 0;
+  const doneCount = plan ? plan.tasks.filter((_, i) => day.done[i]).length : 0;
+  const pct = plan && plan.tasks.length ? Math.round(doneCount / plan.tasks.length * 100) : 0;
+
+  const expForDir = dir ? S.experiments.filter(x => x.dir === dir.id) : [];
+
+  return `
+  <div class="spread" style="margin-bottom:16px">
+    <div>
+      <div class="label">TODAY'S MISSION</div>
+      <h2 style="margin:6px 0 2px;font-size:20px;font-weight:600;letter-spacing:-.025em">${esc(plan ? plan.theme : '自由探索日')}</h2>
+      <div class="tiny dim">${prettyFull(date)}</div>
+    </div>
+    <div class="row" style="gap:8px">
+      <button class="btn ghost sm" data-action="prev-day">←</button>
+      <button class="btn ghost sm" data-action="jump-today">回到今天</button>
+      <button class="btn ghost sm" data-action="next-day">→</button>
+    </div>
+  </div>
+
+  ${plan ? `
+  <div class="card" style="margin-bottom:16px">
+    <div class="spread">
+      <div class="row" style="gap:10px">
+        <span style="width:7px;height:7px;border-radius:99px;background:${dirColor(plan.dir)}"></span>
+        <span class="sm" style="font-weight:500">${esc(plan.label)}</span>
+        ${dir ? `<span class="tiny dim">· ${esc(dir.name)}</span>` : ''}
+      </div>
+      <span class="tiny mono dim">${doneCount}/${plan.tasks.length} 完成 · 共 ${totalMin} min</span>
+    </div>
+    <div style="margin-top:10px">${meterHTML(pct, 'thin')}</div>
+  </div>` : ''}
+
+  <section class="section" style="margin-top:16px">
+    <div class="section-head"><div class="section-title">Mission</div></div>
+    <div class="grid" style="gap:8px">
+      ${tasksHTML}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">What did I discover today?</div>
+        <div class="section-sub">如实写，这里没有别人看</div>
+      </div>
+    </div>
+    <div class="card pad-lg">
+      <div class="field">
+        <label class="field-lab">今天做了什么？</label>
+        <textarea class="textarea" data-field="discover" data-date="${date}" placeholder="例如：3D Gaussian Splatting 小实验">${esc(day.discover)}</textarea>
+      </div>
+      <div class="grid g2">
+        <div class="field">
+          <label class="field-lab">最爽的部分</label>
+          <textarea class="textarea" data-field="best" data-date="${date}" placeholder="例如：终于看到自己生成的 3D 场景">${esc(day.best)}</textarea>
+        </div>
+        <div class="field">
+          <label class="field-lab">最烦的部分</label>
+          <textarea class="textarea" data-field="worst" data-date="${date}" placeholder="例如：环境配置 + CUDA">${esc(day.worst)}</textarea>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-lab">如果没人要求我，我还会继续吗？</label>
+        <div class="row" style="gap:12px">
+          ${dotsHTML(day.keep || 0, true, `data-action="set-keep" data-date="${date}"`)}
+          <span class="tiny dim" data-keep-label>${keepLabel(day.keep)}</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-lab">结论</label>
+        <input class="input" data-field="conclusion" data-date="${date}" value="${esc(day.conclusion)}" placeholder="例如：我可能真的喜欢 3D Vision">
+      </div>
+
+      <div class="row" style="margin-top:16px;gap:8px">
+        <button class="btn primary" data-action="save-day" data-date="${date}">保存到本地</button>
+        <button class="btn ghost" data-action="add-log" data-date="${date}">同时记入方向日志</button>
+        <span class="tiny dim" id="saveHint"></span>
+      </div>
+    </div>
+  </section>
+
+  ${expForDir.length ? `
+  <section class="section">
+    <div class="section-head"><div class="section-title">这个方向的相关实验</div></div>
+    <div class="grid g2">${expForDir.map(x => expCardHTML(x)).join('')}</div>
+  </section>` : ''}
+  `;
+}
+function keepLabel(v){
+  return ['还没想','完全不想','有点犹豫','还行','想继续','非常想继续'][v] || '还没想';
+}
+
+/* ---------- CALENDAR ---------- */
+function renderCalendar(){
+  const { y, m } = S.calView;
+  const first = new Date(y, m, 1);
+  const startDow = (first.getDay() + 6) % 7; // Monday first
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push('<div class="cal-cell empty"></div>');
+  for (let d = 1; d <= daysInMonth; d++){
+    const dateStr = `${y}-${pad2(m+1)}-${pad2(d)}`;
+    const plan = PLAN[dateStr];
+    const isToday = dateStr === TODAY;
+    const isActive = dateStr === S.activeDay;
+    const cls = ['cal-cell', plan ? 'has-plan' : '', isToday ? 'today' : '', isActive ? 'active' : ''].filter(Boolean).join(' ');
+    cells.push(`<div class="${cls}" ${plan ? `data-action="open-day" data-date="${dateStr}"` : ''} role="${plan ? 'button' : 'gridcell'}" tabindex="${plan ? 0 : -1}">
+      ${isToday ? '<span class="cal-today-flag">TODAY</span>' : ''}
+      <span class="cal-date">${d}</span>
+      ${plan ? `<span class="cal-pill"><span class="pd" style="background:${dirColor(plan.dir)}"></span>${esc(plan.label)}</span>
+      <span class="cal-theme">${esc(plan.theme)}</span>` : ''}
+    </div>`);
+  }
+
+  const monthName = first.toLocaleDateString('zh-CN', { year:'numeric', month:'long' });
+
+  return `
+  <div class="spread" style="margin-bottom:16px">
+    <div>
+      <div class="label">MONTHLY CALENDAR</div>
+      <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;letter-spacing:-.025em">${monthName}</h2>
+    </div>
+    <div class="row" style="gap:6px">
+      <button class="btn ghost sm" data-action="cal-prev">←</button>
+      <button class="btn ghost sm" data-action="cal-now">本月</button>
+      <button class="btn ghost sm" data-action="cal-next">→</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:14px">
+    <div class="cal-head">
+      ${['MON','TUE','WED','THU','FRI','SAT','SUN'].map(d => `<div class="cal-dow">${d}</div>`).join('')}
+    </div>
+    <div class="cal-grid">${cells.join('')}</div>
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">4 周结构</div>
+        <div class="section-sub">每周有一个明确的目的，不是一个待办清单</div>
+      </div>
+    </div>
+    <div class="grid g2">
+      ${WEEKS.map(w => {
+        const days = Object.keys(PLAN).filter(d => d >= w.from && d <= w.to).sort();
+        return `<div class="card">
+          <div class="row" style="gap:9px;margin-bottom:9px">
+            <span class="tag accent">WEEK ${w.n}</span>
+            <span class="sm" style="font-weight:500">${esc(w.name)}</span>
+          </div>
+          <div class="stack" style="gap:5px">
+            ${days.map(d => {
+              const p = PLAN[d];
+              return `<button class="row" style="gap:8px;width:100%;text-align:left;padding:3px 0" data-action="open-day" data-date="${d}">
+                <span class="tiny mono dim" style="flex:0 0 44px">${d.slice(5)}</span>
+                <span style="width:5px;height:5px;border-radius:99px;background:${dirColor(p.dir)};flex:0 0 5px"></span>
+                <span class="tiny muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.theme)}</span>
+              </button>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </section>
+  `;
+}
+
+/* ---------- EXPERIMENTS ---------- */
+function expCardHTML(x){
+  const d = dirById(x.dir);
+  const statusMap = { done:['已完成','s-done'], doing:['进行中','s-doing'], planned:['计划中',''] };
+  const st = statusMap[x.status] || statusMap.planned;
+  return `<div class="exp">
+    <div class="spread" style="align-items:flex-start">
+      <div>
+        <div class="exp-title">${esc(x.title)}</div>
+        <div class="tiny dim" style="margin-top:3px">${d ? esc(d.name) : '未分类'}${x.date ? ' · ' + prettyDate(x.date) : ''}</div>
+      </div>
+      <span class="status-pill ${st[1]}">${st[0]}</span>
+    </div>
+
+    ${x.hyp ? `<div class="exp-block"><div class="bk">Hypothesis</div><div class="bv">${esc(x.hyp)}</div></div>` : ''}
+    ${x.problem ? `<div class="exp-block"><div class="bk">Problem</div><div class="bv">${esc(x.problem)}</div></div>` : ''}
+    ${x.result ? `<div class="exp-block"><div class="bk">Result</div><div class="bv">${esc(x.result)}</div></div>` : ''}
+    ${x.reflect ? `<div class="exp-block"><div class="bk">Reflection</div><div class="bv">${esc(x.reflect)}</div></div>` : ''}
+
+    <div class="spread" style="margin-top:auto;padding-top:4px;border-top:1px solid var(--border)">
+      <span class="tiny dim">我会再做一次吗</span>
+      <span class="row" style="gap:8px">
+        ${starsHTML(x.score, false)}
+        <button class="btn ghost sm" data-action="cycle-exp" data-id="${x.id}">切换状态</button>
+      </span>
+    </div>
+  </div>`;
+}
+
+function renderExperiments(){
+  const groups = { doing:[], planned:[], done:[] };
+  S.experiments.forEach(x => { (groups[x.status] || groups.planned).push(x); });
+
+  const countBy = id => S.experiments.filter(x => x.dir === id).length;
+
+  return `
+  <div class="spread" style="margin-bottom:16px">
+    <div>
+      <div class="label">BUILD LAB</div>
+      <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;letter-spacing:-.025em">实验项目</h2>
+      <div class="tiny dim" style="margin-top:4px">重点不是学习某个学科，而是做一件 2 小时能做完的事</div>
+    </div>
+    <button class="btn primary" data-action="new-exp">+ 新建实验</button>
+  </div>
+
+  <div id="newExpForm"></div>
+
+  ${['doing','planned','done'].map(k => {
+    if (!groups[k].length) return '';
+    const names = { doing:'进行中', planned:'计划中', done:'已完成' };
+    return `<section class="section">
+      <div class="section-head"><div class="section-title">${names[k]} <span class="dim mono tiny">${groups[k].length}</span></div></div>
+      <div class="grid g2">${groups[k].map(x => expCardHTML(x)).join('')}</div>
+    </section>`;
+  }).join('')}
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">实验分布</div>
+        <div class="section-sub">哪个方向你实际动手最多</div>
+      </div>
+    </div>
+    <div class="card">
+      ${S.directions.map(d => {
+        const n = countBy(d.id);
+        const pct = S.experiments.length ? Math.round(n / S.experiments.length * 100) : 0;
+        return `<div style="padding:9px 0">
+          <div class="spread" style="margin-bottom:6px">
+            <span class="sm">${esc(d.name)}</span>
+            <span class="tiny mono dim">${n}</span>
+          </div>
+          ${meterHTML(pct, 'thin')}
+        </div>`;
+      }).join('')}
+    </div>
+  </section>
+  `;
+}
+
+/* ---------- DIRECTIONS ---------- */
+function renderDirections(){
+  const ranked = sortedDirections();
+
+  return `
+  <div class="spread" style="margin-bottom:16px">
+    <div>
+      <div class="label">DIRECTION MATRIX</div>
+      <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;letter-spacing:-.025em">方向矩阵</h2>
+      <div class="tiny dim" style="margin-top:4px">分数随实验更新。点击表格里的数字可以改分。</div>
+    </div>
+    <button class="btn primary" data-action="new-dir">+ 新方向</button>
+  </div>
+
+  <div class="grid g2">
+    ${ranked.map(d => {
+      const sc = dirScore(d);
+      const pct = Math.round(sc / 5 * 100);
+      return `<button class="dir-card" data-action="open-dir" data-id="${d.id}">
+        <div class="spread" style="align-items:flex-start">
+          <div class="row" style="gap:11px">
+            <span class="dir-emoji">${d.emoji || '◇'}</span>
+            <div style="min-width:0">
+              <div class="dir-name">${esc(d.name)}</div>
+              <div class="dir-tags">${esc(d.tags.join(' · '))}</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div class="dir-score">${sc.toFixed(1)}<span> / 5</span></div>
+          </div>
+        </div>
+
+        ${meterHTML(pct, 'thin')}
+
+        <div class="stack" style="gap:7px">
+          ${['interest','curiosity','continue'].map(k => {
+            const meta = SCORE_KEYS.find(x => x.k === k);
+            return `<div class="score-row">
+              <span class="k">${meta.label}</span>
+              <span>${meterHTML(d.scores[k] / 5 * 100, 'thin')}</span>
+              <span class="v">${d.scores[k]}.0</span>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <div class="spread" style="border-top:1px solid var(--border);padding-top:11px">
+          <span class="tiny dim">${(d.log || []).length} 条探索记录</span>
+          <span class="tiny" style="color:var(--accent)">查看记录 →</span>
+        </div>
+      </button>`;
+    }).join('')}
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">完整评分表</div>
+        <div class="section-sub">点击任意格子改分（1 到 5 循环）</div>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Direction</th>
+            ${SCORE_KEYS.map(x => `<th class="c">${x.label}</th>`).join('')}
+            <th class="c">总分</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ranked.map(d => `<tr>
+            <td>
+              <span class="row" style="gap:8px">
+                <span style="width:6px;height:6px;border-radius:99px;background:${dirColor(d.id)};flex:0 0 6px"></span>
+                <span style="font-weight:500">${esc(d.name)}</span>
+              </span>
+            </td>
+            ${SCORE_KEYS.map(x => {
+              const v = d.scores[x.k] || 0;
+              const cls = v >= 5 ? 'hi' : (v <= 2 ? 'mid' : '');
+              return `<td class="c"><span class="cell-score ${cls}" data-action="bump-score" data-id="${d.id}" data-key="${x.k}">${v}</span></td>`;
+            }).join('')}
+            <td class="c"><span class="mono" style="font-weight:600">${dirScore(d).toFixed(1)}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  `;
+}
+
+/* ---------- DIRECTION DETAIL ---------- */
+function renderDirectionDetail(id){
+  const d = dirById(id);
+  if (!d) return `<div class="empty">找不到这个方向。<button class="btn ghost" data-route="directions" style="margin-top:12px">返回方向矩阵</button></div>`;
+
+  const sc = dirScore(d);
+  const pct = Math.round(sc / 5 * 100);
+  const exps = S.experiments.filter(x => x.dir === d.id);
+  const qs = S.research.filter(q => q.dir === d.id);
+  const careers = S.career.filter(c => c.dir === d.id);
+  const logs = (d.log || []).slice().sort((a, b) => b.d.localeCompare(a.d));
+
+  return `
+  <button class="btn ghost sm" data-route="directions" style="margin-bottom:16px">← 返回方向矩阵</button>
+
+  <div class="hero" style="background:radial-gradient(120% 140% at 100% 0%, ${dirColor(d.id)}22 0%, transparent 55%), var(--panel)">
+    <div class="spread" style="align-items:flex-start">
+      <div class="row" style="gap:13px">
+        <span class="dir-emoji" style="width:44px;height:44px;flex:0 0 44px;font-size:22px">${d.emoji || '◇'}</span>
+        <div>
+          <h1 style="font-size:22px;margin:0 0 4px">${esc(d.name)}</h1>
+          <div class="tiny dim">${esc(d.tags.join(' · '))}</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="dir-score" style="font-size:26px">${sc.toFixed(1)}<span> / 5</span></div>
+        <div class="tiny dim" style="margin-top:4px">综合评分</div>
+      </div>
+    </div>
+    ${d.blurb ? `<p style="margin:14px 0 0;color:var(--text-2);font-size:13.5px">${esc(d.blurb)}</p>` : ''}
+    <div style="margin-top:16px">${meterHTML(pct, 'thick')}</div>
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">评分</div>
+        <div class="section-sub">点击修改</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stack" style="gap:0">
+        ${SCORE_KEYS.map(x => {
+          const v = d.scores[x.k] || 0;
+          return `<div class="spread" style="padding:10px 0;border-bottom:1px solid var(--border)">
+            <span class="sm" style="flex:0 0 60px">${x.label}</span>
+            <span style="flex:1;margin:0 12px">${meterHTML(v / 5 * 100, 'thin')}</span>
+            <span class="row" style="gap:6px">
+              ${dotsHTML(v, true, `data-action="set-score" data-id="${d.id}" data-key="${x.k}"`)}
+            </span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">探索记录</div>
+        <div class="section-sub">${logs.length} 条</div>
+      </div>
+      <button class="btn ghost sm" data-action="new-log" data-id="${d.id}">+ 添加</button>
+    </div>
+    <div class="card">
+      ${logs.length ? `<div class="tl">${logs.map(l => `
+        <div class="tl-item done">
+          <span class="tl-dot"></span>
+          <div>
+            <div class="tl-title">${esc(l.t)}</div>
+            <div class="tl-meta">${prettyFull(l.d)}</div>
+          </div>
+        </div>`).join('')}</div>` : '<div class="empty">还没有探索记录。去今日探索写下第一条，或者点右上角添加。</div>'}
+    </div>
+  </section>
+
+  ${exps.length ? `
+  <section class="section">
+    <div class="section-head"><div class="section-title">相关实验</div></div>
+    <div class="grid g2">${exps.map(x => expCardHTML(x)).join('')}</div>
+  </section>` : ''}
+
+  ${qs.length ? `
+  <section class="section">
+    <div class="section-head"><div class="section-title">我想搞懂的问题</div></div>
+    <div class="stack" style="gap:8px">
+      ${qs.map(q => `<div class="q-item">
+        <span class="q-text" style="flex:1">${esc(q.q)}</span>
+        <span class="status-pill s-${q.status}">${qStatusLabel(q.status)}</span>
+      </div>`).join('')}
+    </div>
+  </section>` : ''}
+
+  ${careers.length ? `
+  <section class="section">
+    <div class="section-head"><div class="section-title">相关职业</div></div>
+    <div class="grid g2">${careers.map(c => careerCardHTML(c)).join('')}</div>
+  </section>` : ''}
+  `;
+}
+
+/* ---------- CAREER ---------- */
+function careerCardHTML(c){
+  const d = dirById(c.dir);
+  return `<div class="career-card">
+    <div class="spread" style="align-items:flex-start">
+      <div>
+        <div class="career-name">${esc(c.name)}</div>
+        <div class="tiny dim" style="margin-top:3px">${d ? esc(d.name) : ''}</div>
+      </div>
+      <span class="tiny mono dim">${c.fit}.0 ★</span>
+    </div>
+    <div class="exp-block"><div class="bk">真实工作</div><div class="bv">${esc(c.real)}</div></div>
+    <div class="exp-block" style="border-left-color:var(--accent-line)"><div class="bk" style="color:var(--accent)">2 小时试一下</div><div class="bv">${esc(c.tryIt)}</div></div>
+    <div class="spread" style="border-top:1px solid var(--border);padding-top:11px">
+      <span class="tiny dim">匹配度</span>
+      <span style="flex:1;margin-left:12px">${meterHTML(c.fit / 5 * 100, 'thin')}</span>
+    </div>
+  </div>`;
+}
+
+function renderCareer(){
+  return `
+  <div style="margin-bottom:16px">
+    <div class="label">CAREER MAP</div>
+    <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;letter-spacing:-.025em">职业地图</h2>
+    <div class="tiny dim" style="margin-top:4px">先模拟工作，再决定专业。每张卡都有一件 2 小时能做完的事。</div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;border-color:var(--accent-line);background:linear-gradient(120deg,var(--accent-soft),transparent 60%),var(--panel)">
+    <div class="label" style="color:var(--accent)">CORE LOOP</div>
+    <div class="row" style="gap:8px;margin-top:8px;flex-wrap:wrap;font-size:12.5px;color:var(--text-2)">
+      <span>Career</span><span class="dim">→</span>
+      <span>人们实际在做什么</span><span class="dim">→</span>
+      <span>试 2 小时</span><span class="dim">→</span>
+      <span>我喜欢这份工作吗</span><span class="dim">→</span>
+      <span style="color:var(--accent)">也许这就是方向</span>
+    </div>
+  </div>
+
+  <div class="grid g2">
+    ${S.career.map(c => careerCardHTML(c)).join('')}
+  </div>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">职业 × 方向 分布</div>
+        <div class="section-sub">哪些方向对应的职业路径最多</div>
+      </div>
+    </div>
+    <div class="card">
+      ${S.directions.map(d => {
+        const n = S.career.filter(c => c.dir === d.id).length;
+        const pct = S.career.length ? Math.round(n / S.career.length * 100) : 0;
+        return `<div style="padding:9px 0">
+          <div class="spread" style="margin-bottom:6px">
+            <span class="sm">${esc(d.name)}</span>
+            <span class="tiny mono dim">${n} 个职业</span>
+          </div>
+          ${meterHTML(pct, 'thin')}
+        </div>`;
+      }).join('')}
+    </div>
+  </section>
+  `;
+}
+
+/* ---------- RESEARCH ---------- */
+function qStatusLabel(s){
+  return { curious:'好奇', doing:'在查', done:'已理解' }[s] || '好奇';
+}
+function renderResearch(){
+  const groups = { curious:[], doing:[], done:[] };
+  S.research.forEach(q => { (groups[q.status] || groups.curious).push(q); });
+
+  return `
+  <div class="spread" style="margin-bottom:16px">
+    <div>
+      <div class="label">RESEARCH POOL</div>
+      <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;letter-spacing:-.025em">研究问题池</h2>
+      <div class="tiny dim" style="margin-top:4px">不是论文收藏夹，是我真正想搞懂的问题</div>
+    </div>
+    <button class="btn primary" data-action="new-q">+ 新问题</button>
+  </div>
+
+  <div id="newQForm"></div>
+
+  ${['curious','doing','done'].map(k => {
+    if (!groups[k].length) return '';
+    return `<section class="section">
+      <div class="section-head"><div class="section-title">${qStatusLabel(k)} <span class="dim mono tiny">${groups[k].length}</span></div></div>
+      <div class="stack" style="gap:8px">
+        ${groups[k].map(q => {
+          const d = dirById(q.dir);
+          return `<div class="q-item">
+            <span style="width:6px;height:6px;border-radius:99px;background:${dirColor(q.dir)};flex:0 0 6px;margin-top:8px"></span>
+            <div style="flex:1;min-width:0">
+              <div class="q-text">${esc(q.q)}</div>
+              <div class="tiny dim" style="margin-top:3px">${d ? esc(d.name) : '未分类'}</div>
+            </div>
+            <button class="status-pill s-${q.status}" data-action="cycle-q" data-q="${esc(q.q)}">${qStatusLabel(q.status)}</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </section>`;
+  }).join('')}
+
+  <section class="section">
+    <div class="card" style="border-style:dashed">
+      <div class="label">提示</div>
+      <div class="sm muted" style="margin-top:6px;line-height:1.6">
+        如果一个问题你能用一句话问出来，它就已经比「我想学 AI」精确得多。
+        当一个问题从「好奇」变成「在查」，通常意味着你真的开始研究它了。
+      </div>
+    </div>
+  </section>
+  `;
+}
+
+/* ---------- DECISION ---------- */
+function renderDecision(){
+  const ranked = sortedDirections();
+  const top3 = ranked.slice(0, 3);
+  const d = S.decision;
+
+  const labels = ['兴趣','好奇','想继续','动手','数学','研究','产品','职业'];
+
+  return `
+  <div style="margin-bottom:16px">
+    <div class="label">DECISION</div>
+    <h2 style="margin:6px 0 0;font-size:20px;font-weight:600;letter-spacing:-.025em">基于证据的暂时决策</h2>
+    <div class="tiny dim" style="margin-top:4px">不是一次性决定未来三年，而是决定接下来验证什么。</div>
+  </div>
+
+  <div class="card pad-lg" style="margin-bottom:16px">
+    <div class="label" style="text-align:center">MY CURRENT HYPOTHESIS</div>
+
+    <div class="tree">
+      <div class="tree-node tree-root">
+        <div class="tn-title">3D + AI</div>
+        <div class="tn-sub">当前假设的交叉点</div>
+      </div>
+      <div class="tree-vline"></div>
+      <div class="tree-branch">
+        <div class="tree-col">
+          <div class="tree-node">
+            <div class="tn-title">${esc(top3[0] ? top3[0].name : '3D Vision')}</div>
+            <div class="tn-sub">${top3[0] ? dirScore(top3[0]).toFixed(1) : '4.6'} ★ · 很想继续做</div>
+          </div>
+          <div class="tree-vline"></div>
+          <div class="tree-node" style="border-color:var(--accent-line);background:var(--accent-soft)">
+            <div class="tn-title" style="color:var(--accent)">下一步深入 4 周</div>
+            <div class="tn-sub">用一个小项目验证</div>
+          </div>
+        </div>
+        <div class="tree-col">
+          <div class="tree-node">
+            <div class="tn-title">${esc(top3[1] ? top3[1].name : 'AI Product')}</div>
+            <div class="tn-sub">${top3[1] ? dirScore(top3[1]).toFixed(1) : '4.3'} ★ · 很想了解</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" style="margin-top:0">
+    <div class="section-head">
+      <div>
+        <div class="section-title">TOP 3</div>
+        <div class="section-sub">按综合评分排序，评分来自实验而非直觉</div>
+      </div>
+    </div>
+    <div class="stack" style="gap:10px">
+      ${top3.map((x, i) => {
+        const sc = dirScore(x);
+        return `<div class="rank-card ${i === 0 ? 'top1' : ''}">
+          <span class="rank-num">TOP ${i+1}</span>
+          <div style="flex:1;min-width:0">
+            <div class="dir-name" style="font-size:14px">${esc(x.name)}</div>
+            <div class="tiny dim" style="margin-top:2px">${esc(x.tags.slice(0,3).join(' · '))}</div>
+            <div class="row" style="gap:10px;margin-top:8px">
+              ${['interest','curiosity','continue'].map((k, idx) => `
+                <span class="tiny dim">${labels[idx]} ${x.scores[k]}.0</span>
+              `).join('')}
+            </div>
+          </div>
+          <div style="text-align:right;flex:0 0 auto">
+            <div class="dir-score" style="font-size:22px">${sc.toFixed(1)}</div>
+            <div style="margin-top:4px">${starsHTML(sc)}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">写下来</div>
+        <div class="section-sub">不写下来的决策等于没做</div>
+      </div>
+    </div>
+    <div class="card pad-lg">
+      <div class="field">
+        <label class="field-lab">当前假设</label>
+        <textarea class="textarea" data-decision="hypothesis" placeholder="我目前倾向于……">${esc(d.hypothesis)}</textarea>
+        <div class="field-hint">例如：我倾向于做 3D Vision 相关的研究生方向，同时保持对 AI 产品的兴趣。</div>
+      </div>
+      <div class="field">
+        <label class="field-lab">最大的不确定性</label>
+        <textarea class="textarea" data-decision="uncertainty" placeholder="我还不知道……">${esc(d.uncertainty)}</textarea>
+        <div class="field-hint">例如：我还不知道自己是更喜欢推导数学，还是更喜欢把东西做出来。</div>
+      </div>
+      <div class="field">
+        <label class="field-lab">下一步</label>
+        <textarea class="textarea" data-decision="next" placeholder="再用 4–8 周验证……">${esc(d.next)}</textarea>
+        <div class="field-hint">例如：用 4 周做一个完整的 3D 重建小项目，从数据采集做到可视化。</div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" data-action="save-decision">保存</button>
+        <span class="tiny dim" id="decHint"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">证据摘要</div>
+        <div class="section-sub">4 周里你实际做了什么</div>
+      </div>
+    </div>
+    <div class="grid g3">
+      <div class="stat"><div class="stat-val">${S.experiments.length}</div><div class="stat-lab">实验总数</div></div>
+      <div class="stat"><div class="stat-val">${S.experiments.filter(x => x.status === 'done').length}</div><div class="stat-lab">已完成实验</div></div>
+      <div class="stat"><div class="stat-val">${S.directions.reduce((a, x) => a + (x.log || []).length, 0)}</div><div class="stat-lab">探索记录</div></div>
+    </div>
+  </section>
+  `;
+}
+
+/* ============================================================
+   8. ACTIONS
+   ============================================================ */
+document.addEventListener('click', e => {
+  const routeEl = e.target.closest('[data-route]');
+  if (routeEl){ go('#/' + routeEl.dataset.route); return; }
+
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const a = el.dataset.action;
+
+  switch(a){
+    case 'toggle-nav':
+      $('#app').classList.toggle('nav-open');
+      break;
+    case 'close-nav':
+      $('#app').classList.remove('nav-open');
+      break;
+
+    case 'toggle-theme': {
+      S.theme = S.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = S.theme;
+      save();
+      render();
+      break;
+    }
+
+    case 'palette':      openPalette(); break;
+    case 'palette-close': closePalette(); break;
+
+    case 'open-dir':
+      go('#/direction/' + el.dataset.id);
+      break;
+
+    case 'open-day':
+      S.activeDay = el.dataset.date;
+      save();
+      go('#/today');
+      break;
+
+    case 'jump-today':
+      S.activeDay = PLAN[TODAY] ? TODAY : '2026-09-11';
+      save(); render();
+      break;
+
+    case 'prev-day': {
+      const dates = Object.keys(PLAN).sort();
+      const i = dates.indexOf(S.activeDay);
+      S.activeDay = dates[Math.max(0, i - 1)] || dates[0];
+      save(); render();
+      break;
+    }
+    case 'next-day': {
+      const dates = Object.keys(PLAN).sort();
+      const i = dates.indexOf(S.activeDay);
+      S.activeDay = dates[Math.min(dates.length - 1, i + 1)] || dates[dates.length - 1];
+      save(); render();
+      break;
+    }
+
+    case 'cal-prev': {
+      let { y, m } = S.calView;
+      m--; if (m < 0){ m = 11; y--; }
+      S.calView = { y, m }; save(); render();
+      break;
+    }
+    case 'cal-next': {
+      let { y, m } = S.calView;
+      m++; if (m > 11){ m = 0; y++; }
+      S.calView = { y, m }; save(); render();
+      break;
+    }
+    case 'cal-now':
+      S.calView = { y: 2026, m: 8 }; save(); render();
+      break;
+
+    case 'toggle-task': {
+      const date = el.dataset.date, idx = el.dataset.idx;
+      const day = getDay(date);
+      day.done[idx] = !day.done[idx];
+      save(); render();
+      break;
+    }
+
+    case 'set-keep': {
+      const v = Number(el.dataset.value);
+      const date = el.dataset.date;
+      getDay(date).keep = v;
+      save(); render();
+      break;
+    }
+
+    case 'save-day': {
+      const date = el.dataset.date;
+      save();
+      const hint = $('#saveHint');
+      if (hint){ hint.textContent = '已保存 ✓'; setTimeout(() => { hint.textContent = ''; }, 1800); }
+      break;
+    }
+
+    case 'add-log': {
+      const date = el.dataset.date;
+      const day = getDay(date);
+      const plan = PLAN[date];
+      const dir = plan ? dirById(plan.dir) : null;
+      const target = dir || sortedDirections()[0];
+      const text = day.discover || (plan ? plan.theme : '一次探索');
+      target.log = target.log || [];
+      target.log.unshift({ d: date, t: text });
+      save(); render();
+      const hint = $('#saveHint');
+      if (hint){ hint.textContent = '已记入 ' + target.name + ' ✓'; setTimeout(() => { hint.textContent = ''; }, 1800); }
+      break;
+    }
+
+    case 'bump-score': {
+      const d = dirById(el.dataset.id);
+      const k = el.dataset.key;
+      d.scores[k] = (d.scores[k] || 0) >= 5 ? 1 : (d.scores[k] || 0) + 1;
+      save(); render();
+      break;
+    }
+
+    case 'set-score': {
+      const d = dirById(el.dataset.id);
+      const k = el.dataset.key;
+      const v = Number(e.target.dataset.value);
+      if (v) { d.scores[k] = v; save(); render(); }
+      break;
+    }
+
+    case 'cycle-exp': {
+      const x = S.experiments.find(v => v.id === el.dataset.id);
+      const order = ['planned', 'doing', 'done'];
+      x.status = order[(order.indexOf(x.status) + 1) % 3];
+      save(); render();
+      break;
+    }
+
+    case 'new-exp': showNewExpForm(); break;
+    case 'create-exp': createExp(); break;
+    case 'cancel-form': render(); break;
+
+    case 'new-dir': {
+      const name = prompt('新方向名称：');
+      if (!name) return;
+      const id = 'd' + Date.now();
+      S.directions.push({
+        id, name: name.trim(), emoji:'◇', tags:['自定义'], blurb:'',
+        scores:{ interest:3, curiosity:3, continue:3, build:3, math:3, research:3, product:3, career:3 },
+        log:[]
+      });
+      save(); render();
+      break;
+    }
+
+    case 'new-log': {
+      const d = dirById(el.dataset.id);
+      const t = prompt('记录这次探索：');
+      if (!t) return;
+      d.log = d.log || [];
+      d.log.unshift({ d: TODAY, t: t.trim() });
+      save(); render();
+      break;
+    }
+
+    case 'new-q': showNewQForm(); break;
+    case 'create-q': createQ(); break;
+
+    case 'cycle-q': {
+      const q = S.research.find(v => v.q === el.dataset.q);
+      const order = ['curious', 'doing', 'done'];
+      q.status = order[(order.indexOf(q.status) + 1) % 3];
+      save(); render();
+      break;
+    }
+
+    case 'save-decision':
+      save();
+      {
+        const h = $('#decHint');
+        if (h){ h.textContent = '已保存 ✓'; setTimeout(() => { h.textContent = ''; }, 1800); }
+      }
+      break;
+  }
+});
+
+/* keyboard on task rows */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' '){
+    const t = e.target.closest('.task');
+    if (t){ e.preventDefault(); t.click(); }
+    const c = e.target.closest('.cal-cell.has-plan');
+    if (c){ e.preventDefault(); c.click(); }
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
+    e.preventDefault();
+    const box = $('#cmdk');
+    if (box.classList.contains('open')) closePalette(); else openPalette();
+  }
+  if (e.key === 'Escape') closePalette();
+});
+
+/* inputs */
+document.addEventListener('input', e => {
+  const f = e.target.closest('[data-field]');
+  if (f){
+    const date = f.dataset.date;
+    const day = getDay(date);
+    day[f.dataset.field] = f.value;
+    save();
+    return;
+  }
+  const dd = e.target.closest('[data-decision]');
+  if (dd){
+    S.decision[dd.dataset.decision] = dd.value;
+    save();
+    return;
+  }
+});
+
+/* ============================================================
+   9. FORMS
+   ============================================================ */
+function showNewExpForm(){
+  const box = $('#newExpForm');
+  if (!box) return;
+  box.innerHTML = `
+    <div class="card pad-lg" style="margin-bottom:16px">
+      <div class="label" style="margin-bottom:12px">NEW EXPERIMENT</div>
+      <div class="field">
+        <label class="field-lab">实验标题</label>
+        <input class="input" id="ne-title" placeholder="例如：用手机照片做一次 3D 重建">
+      </div>
+      <div class="grid g2">
+        <div class="field">
+          <label class="field-lab">方向</label>
+          <select class="input" id="ne-dir">
+            ${S.directions.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-lab">状态</label>
+          <select class="input" id="ne-status">
+            <option value="planned">计划中</option>
+            <option value="doing">进行中</option>
+            <option value="done">已完成</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-lab">假设</label>
+        <textarea class="textarea" id="ne-hyp" placeholder="我想验证什么？"></textarea>
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn primary" data-action="create-exp">创建</button>
+        <button class="btn ghost" data-action="cancel-form">取消</button>
+      </div>
+    </div>`;
+  $('#ne-title').focus();
+}
+function createExp(){
+  const title = ($('#ne-title') || {}).value || '';
+  if (!title.trim()) return;
+  S.experiments.unshift({
+    id: 'x' + Date.now(),
+    title: title.trim(),
+    dir: $('#ne-dir').value,
+    status: $('#ne-status').value,
+    date: TODAY,
+    hyp: ($('#ne-hyp').value || '').trim(),
+    problem:'', result:'', reflect:'', score:0
+  });
+  save(); render();
+}
+
+function showNewQForm(){
+  const box = $('#newQForm');
+  if (!box) return;
+  box.innerHTML = `
+    <div class="card pad-lg" style="margin-bottom:16px">
+      <div class="label" style="margin-bottom:12px">NEW QUESTION</div>
+      <div class="field">
+        <label class="field-lab">我真正想搞懂的问题</label>
+        <input class="input" id="nq-text" placeholder="例如：3D Gaussian Splatting 为什么有效？">
+      </div>
+      <div class="field">
+        <label class="field-lab">属于哪个方向</label>
+        <select class="input" id="nq-dir">
+          ${S.directions.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn primary" data-action="create-q">添加</button>
+        <button class="btn ghost" data-action="cancel-form">取消</button>
+      </div>
+    </div>`;
+  $('#nq-text').focus();
+}
+function createQ(){
+  const text = ($('#nq-text') || {}).value || '';
+  if (!text.trim()) return;
+  S.research.unshift({ q: text.trim(), dir: $('#nq-dir').value, status: 'curious' });
+  save(); render();
+}
+
+/* ============================================================
+   10. COMMAND PALETTE
+   ============================================================ */
+let paletteItems = [];
+let paletteSel = 0;
+
+function openPalette(){
+  const items = [];
+  Object.keys(TITLES).filter(k => k !== 'direction').forEach(k => {
+    items.push({ label: TITLES[k][0], hint: '页面', ico: '▸', route: k });
+  });
+  S.directions.forEach(d => {
+    items.push({ label: d.name, hint: '方向', ico: '◇', route: 'direction/' + d.id });
+  });
+  items.push({ label: S.theme === 'dark' ? '切换到浅色模式' : '切换到深色模式', hint: '外观', ico: '◐', action:'theme' });
+  paletteItems = items;
+  paletteSel = 0;
+  $('#cmdk').classList.add('open');
+  $('#cmdkInput').value = '';
+  renderPaletteList('');
+  setTimeout(() => $('#cmdkInput').focus(), 20);
+}
+function closePalette(){
+  $('#cmdk').classList.remove('open');
+}
+function renderPaletteList(q){
+  const filtered = paletteItems.filter(i => i.label.toLowerCase().includes(q.toLowerCase()));
+  $('#cmdkList').innerHTML = filtered.length
+    ? filtered.map((i, idx) => `<button class="cmdk-item ${idx === paletteSel ? 'sel' : ''}" data-pi="${paletteItems.indexOf(i)}">
+        <span class="ci-ico">${i.ico}</span>
+        <span>${esc(i.label)}</span>
+        <span class="ci-hint">${i.hint}</span>
+      </button>`).join('')
+    : '<div class="empty" style="margin:8px">没有匹配项</div>';
+}
+$('#cmdkInput').addEventListener('input', e => {
+  paletteSel = 0;
+  renderPaletteList(e.target.value);
+});
+$('#cmdkList').addEventListener('click', e => {
+  const b = e.target.closest('[data-pi]');
+  if (!b) return;
+  runPalette(Number(b.dataset.pi));
+});
+document.addEventListener('keydown', e => {
+  if (!$('#cmdk').classList.contains('open')) return;
+  const q = $('#cmdkInput').value;
+  const filtered = paletteItems.filter(i => i.label.toLowerCase().includes(q.toLowerCase()));
+  if (e.key === 'ArrowDown'){ e.preventDefault(); paletteSel = Math.min(filtered.length - 1, paletteSel + 1); renderPaletteList(q); }
+  if (e.key === 'ArrowUp'){ e.preventDefault(); paletteSel = Math.max(0, paletteSel - 1); renderPaletteList(q); }
+  if (e.key === 'Enter' && filtered[paletteSel]){
+    e.preventDefault();
+    runPalette(paletteItems.indexOf(filtered[paletteSel]));
+  }
+});
+function runPalette(idx){
+  const item = paletteItems[idx];
+  if (!item) return;
+  closePalette();
+  if (item.action === 'theme'){
+    S.theme = S.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = S.theme;
+    save(); render();
+    return;
+  }
+  go('#/' + item.route);
+}
+
+/* ============================================================
+   11. BOOT
+   ============================================================ */
+function boot(){
+  S = load();
+  document.documentElement.dataset.theme = S.theme || 'dark';
+  renderJourney();
+  render();
+  window.addEventListener('hashchange', render);
+  window.addEventListener('resize', () => {
+    $('#menuBtn').style.display = window.innerWidth <= 900 ? 'grid' : 'none';
+  });
+  $('#menuBtn').style.display = window.innerWidth <= 900 ? 'grid' : 'none';
+}
+boot();
+</script>
+</body>
+</html>

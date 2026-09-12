@@ -1,0 +1,96 @@
+/* ============================================================
+   css/tokens.css
+   设计变量 + Reset + 基础排版
+   ============================================================ */
+:root{
+  color-scheme: dark;
+  --bg:#08090a;
+  --bg-elev:#0b0c0e;
+  --panel:#101113;
+  --panel-2:#15161a;
+  --panel-3:#1b1d21;
+  --border:rgba(255,255,255,.07);
+  --border-strong:rgba(255,255,255,.13);
+  --text:#eceef1;
+  --text-2:#9aa0a8;
+  --text-3:#6a6f78;
+  --accent:#6f7bf7;
+  --accent-hover:#828bf9;
+  --accent-soft:rgba(111,123,247,.14);
+  --accent-line:rgba(111,123,247,.35);
+  --track:rgba(255,255,255,.08);
+  --ok:#4ecb8b;
+  --warn:#e8b04e;
+  --danger:#e5645f;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.7);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow-lg:0 24px 60px -12px rgba(0,0,0,.7);
+  --r-lg:14px;
+  --r-md:10px;
+  --r-sm:7px;
+  --sidebar-w:238px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+}
+:root[data-theme="light"]{
+  color-scheme: light;
+  --bg:#fbfbfc;
+  --bg-elev:#f6f6f8;
+  --panel:#ffffff;
+  --panel-2:#f7f7f9;
+  --panel-3:#f1f1f4;
+  --border:rgba(15,18,25,.08);
+  --border-strong:rgba(15,18,25,.16);
+  --text:#15171c;
+  --text-2:#5c6270;
+  --text-3:#878d99;
+  --accent:#5a67e8;
+  --accent-hover:#4a57d8;
+  --accent-soft:rgba(90,103,232,.10);
+  --accent-line:rgba(90,103,232,.35);
+  --track:rgba(15,18,25,.07);
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 12px 28px -18px rgba(16,24,40,.28);
+  --shadow-sm:0 1px 2px rgba(16,24,40,.06);
+  --shadow-lg:0 24px 60px -12px rgba(16,24,40,.22);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:14px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--accent-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:99px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3);background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* 通用工具类 */
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--text-2)}
+.dim{color:var(--text-3)}
+.tiny{font-size:11.5px}
+.sm{font-size:12.5px}
+.row{display:flex;align-items:center;gap:10px}
+.spread{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.stack{display:flex;flex-direction:column}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.label{
+  font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-3);
+}
