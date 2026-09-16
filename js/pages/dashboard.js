@@ -10,7 +10,7 @@ EX.pages.dashboard = function(){
   const UI = EX.ui;
   const today = U.isoOf(new Date());
 
-  const elapsed = Math.max(1, U.daysBetween(S.startDate, today) + 1);
+  const elapsed = Math.max(1, U.daysBetween(S.startDate, today));
   const expN = S.experiments.length;
   const dirN = S.directions.filter(d => score(d) >= 4).length;
 
@@ -19,7 +19,7 @@ EX.pages.dashboard = function(){
   const topScore = score(top);
   const topPct = Math.round(topScore / 5 * 100);
 
-  const plan = EX.PLAN[S.activeDay] || EX.PLAN['2026-09-11'];
+  const plan = EX.PLAN[S.activeDay] || (S.customPlan && S.customPlan[S.activeDay]) || EX.PLAN['2026-09-15'];
   const todayDir = S.directions.find(d => d.id === plan.dir) || top;
 
   const activity = recentActivity(S);

@@ -209,6 +209,15 @@ a{color:inherit;text-decoration:none}
 .cal-pill .pd{width:4px;height:4px;border-radius:99px;flex:0 0 4px}
 .cal-theme{font-size:10.5px;color:var(--text-3);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .cal-today-flag{position:absolute;top:6px;right:7px;font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--accent)}
+.cal-cell.has-plan{cursor:pointer}
+.cal-pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 6px;border-radius:5px;background:var(--panel-3);color:var(--text-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:1px solid var(--border);cursor:pointer;transition:background .14s,border-color .14s,transform .08s}
+.cal-pill:hover{background:var(--panel-4);border-color:var(--border-strong)}
+.cal-pill:active{transform:translateY(1px)}
+.cal-pill.is-custom{background:rgba(63,199,189,.08);border-color:rgba(63,199,189,.35);color:var(--text-1)}
+.cal-pill.is-custom:hover{background:rgba(63,199,189,.18);border-color:rgba(63,199,189,.55)}
+.section-highlight{outline:2px solid var(--accent);outline-offset:-2px;border-radius:var(--r-md);box-shadow:0 0 0 4px var(--accent-soft);animation:hl-pulse 1.6s ease-out 1}
+@keyframes hl-pulse{0%{box-shadow:0 0 0 0 var(--accent-soft)}60%{box-shadow:0 0 0 6px var(--accent-soft)}100%{box-shadow:0 0 0 4px var(--accent-soft)}}
+.task-list-highlight{background:var(--panel-2);border-radius:var(--r-md);padding:6px;border:1px dashed var(--border-strong)}
 
 .tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--panel)}
 table.tbl{width:100%;border-collapse:collapse;font-size:12.5px;min-width:620px}
@@ -579,6 +588,8 @@ function defaultState(){
     startDate: START_DATE,
     activeDay: START_DATE,
     calView: { y: 2026, m: 8 },
+    customPlan: {},
+    highlightSource: null,
     directions: [
       { id:'vision3d', name:'3D Vision', emoji:'🧠',
         tags:['Computer Vision','Reconstruction','NeRF','Gaussian Splatting'],
@@ -698,6 +709,12 @@ function mergeWithDefaults(parsed){
   out.calView = Object.assign(base.calView, parsed.calView || {});
   out.decision = Object.assign(base.decision, parsed.decision || {});
   out.daily = parsed.daily || {};
+  out.customPlan = parsed.customPlan && typeof parsed.customPlan === 'object' ? parsed.customPlan : {};
+  out.highlightSource = (parsed.highlightSource === 'plan' || parsed.highlightSource === 'custom') ? parsed.highlightSource : null;
+  /* 迁移：旧版本 activeDay 可能指向新计划里已不存在的日期，做一次兜底 */
+  if (!PLAN[out.activeDay] && !out.customPlan[out.activeDay]) {
+    out.activeDay = START_DATE;
+  }
   out.directions = (parsed.directions || base.directions).map(d => ({
     id: d.id || uid('d'),
     name: d.name || '未命名方向',
@@ -769,7 +786,7 @@ function dirScore(d){
 }
 function sortedDirections(){ return S.directions.slice().sort((a, b) => dirScore(b) - dirScore(a)); }
 function getDay(date){
-  if (!S.daily[date]) S.daily[date] = { done:{}, discover:'', best:'', worst:'', keep:0, conclusion:'' };
+  if (!S.daily[date]) S.daily[date] = { done:{}, cpDone:false, discover:'', best:'', worst:'', keep:0, conclusion:'' };
   return S.daily[date];
 }
 function allActivity(){
@@ -987,7 +1004,7 @@ function renderJourney(){
    页面：Dashboard
    ============================================================ */
 function renderDashboard(){
-  const elapsed = Math.max(1, daysBetween(START_DATE, TODAY) + 1);
+  const elapsed = Math.max(1, daysBetween(START_DATE, TODAY));
   const expN = S.experiments.length;
   const dirN = S.directions.filter(d => dirScore(d) >= 4).length;
 
@@ -996,7 +1013,7 @@ function renderDashboard(){
   const topScore = dirScore(top);
   const topPct = Math.round(topScore / 5 * 100);
 
-  const todayPlan = PLAN[S.activeDay] || PLAN[START_DATE];
+  const todayPlan = PLAN[S.activeDay] || S.customPlan[S.activeDay] || PLAN[START_DATE];
   const todayDir = dirById(todayPlan.dir) || top;
 
   const activity = allActivity();
@@ -1230,33 +1247,86 @@ function renderDashboard(){
 function renderToday(){
   const date = S.activeDay || START_DATE;
   const plan = PLAN[date];
+  const cp = S.customPlan[date];
   const day = getDay(date);
-  const dir = plan ? dirById(plan.dir) : null;
 
-  const tasksHTML = plan ? plan.tasks.map((t, i) => {
+  /* 主方向：优先默认 plan，其次自定义 cp */
+  const dirId = (plan && plan.dir) || (cp && cp.dir) || '';
+  const dir = dirId ? dirById(dirId) : null;
+
+  /* 主题：默认 plan 优先，没有则用自定义 cp */
+  const theme = (plan && plan.theme) || (cp && cp.theme) || '自由探索日';
+
+  /* 默认任务列表 */
+  const planTasksHTML = plan ? plan.tasks.map((t, i) => {
     const done = !!day.done[i];
     return `<div class="task ${done ? 'done' : ''}" data-action="toggle-task" data-date="${date}" data-idx="${i}" role="button" tabindex="0">
       <span class="check ${done ? 'on' : ''}">✓</span>
-      <div style="min-width:0">
+      <div style="min-width:0;flex:1">
         <div class="task-kind">${pad2(i+1)} · ${esc(t.k)}</div>
         <div class="task-title">${esc(t.t)}</div>
         <div class="task-min">${t.m} min</div>
       </div>
     </div>`;
-  }).join('') : '<div class="empty">这一天没有安排任务</div>';
+  }).join('') : '';
 
-  const totalMin = plan ? plan.tasks.reduce((a, b) => a + b.m, 0) : 0;
-  const doneCount = plan ? plan.tasks.filter((_, i) => day.done[i]).length : 0;
-  const pct = plan && plan.tasks.length ? Math.round(doneCount / plan.tasks.length * 100) : 0;
+  /* 自定义任务列表（idx 用 cN 前缀避免与默认任务索引冲突） */
+  const customTasks = (cp && cp.tasks) ? cp.tasks : [];
+  const customTasksHTML = customTasks.map((t, i) => {
+    const idx = 'c' + i;
+    const done = !!day.done[idx];
+    return `<div class="task ${done ? 'done' : ''}" style="cursor:pointer;display:flex;align-items:center;gap:10px" data-action="toggle-task" data-date="${date}" data-idx="${idx}">
+      <span class="check ${done ? 'on' : ''}">✓</span>
+      <div style="min-width:0;flex:1">
+        <div class="task-kind">${esc(t.k)} · 自定义</div>
+        <div class="task-title">${esc(t.t)}</div>
+        <div class="task-min">${t.m} min</div>
+      </div>
+      <button class="btn ghost sm" data-action="edit-task" data-date="${date}" data-task-id="${t.id}" style="flex:0 0 auto">编辑</button>
+      <button class="btn ghost sm" data-action="del-task" data-date="${date}" data-task-id="${t.id}" style="flex:0 0 auto;color:var(--danger)">×</button>
+    </div>`;
+  }).join('');
+
+  const emptyHTML = '';
+
+  /* 统计：合并任务总数与完成数 */
+  const planCount = plan ? plan.tasks.length : 0;
+  const totalCount = planCount + customTasks.length;
+  const doneCount = (plan ? plan.tasks.filter((_, i) => day.done[i]).length : 0)
+    + customTasks.filter((_, i) => day.done['c' + i]).length;
+  const totalMin = (plan ? plan.tasks.reduce((a, b) => a + b.m, 0) : 0)
+    + customTasks.reduce((a, b) => a + b.m, 0);
+  const pct = totalCount ? Math.round(doneCount / totalCount * 100) : 0;
 
   const expForDay = S.experiments.filter(x => x.date === date);
   const expForDir = dir ? S.experiments.filter(x => x.dir === dir.id && x.date !== date) : [];
+
+  /* 头部卡片用 label/dir，分别展示默认与自定义 */
+  const headPlan = plan
+    ? `<div class="row" style="gap:10px">
+        <span style="width:7px;height:7px;border-radius:99px;background:${dirColor(plan.dir)}"></span>
+        <span class="sm" style="font-weight:500">${esc(plan.label)}</span>
+        ${dirById(plan.dir) ? `<span class="tiny dim">· ${esc(dirById(plan.dir).name)}</span>` : ''}
+      </div>`
+    : '<span class="tiny dim">默认计划无</span>';
+  const headCp = cp
+    ? `<div class="row" style="gap:10px;margin-top:${plan ? '6px' : '0'}">
+        <span style="width:7px;height:7px;border-radius:99px;background:${cp.dir ? dirColor(cp.dir) : 'var(--text-3)'}"></span>
+        <span class="sm" style="font-weight:500">${esc(cp.label || '自定义')}</span>
+        ${cp.dir ? (dirById(cp.dir) ? `<span class="tiny dim">· ${esc(dirById(cp.dir).name)}</span>` : '') : ''}
+      </div>`
+    : '';
+
+  /* 当日自定义日程详情（与月历页面共享同一份 S.customPlan） */
+  const cpDirName = cp && cp.dir ? ((dirById(cp.dir) || {}).name || '') : '';
+  const cpTaskCount = cp ? (cp.tasks || []).length : 0;
+  const cpTaskMin = cp ? (cp.tasks || []).reduce((a, b) => a + b.m, 0) : 0;
 
   return `
   <div class="spread" style="margin-bottom:16px">
     <div>
       <div class="label">TODAY'S MISSION</div>
-      <h2 style="margin:6px 0 2px;font-size:20px;font-weight:600;letter-spacing:-.025em">${esc(plan ? plan.theme : '自由探索日')}</h2>
+      <h2 style="margin:6px 0 2px;font-size:20px;font-weight:600;letter-spacing:-.025em">${esc(theme)}</h2>
       <div class="tiny dim">${prettyFull(date)}</div>
     </div>
     <div class="row" style="gap:8px">
@@ -1266,22 +1336,59 @@ function renderToday(){
     </div>
   </div>
 
-  ${plan ? `
+  ${(plan || cp) ? `
   <div class="card" style="margin-bottom:16px">
-    <div class="spread">
-      <div class="row" style="gap:10px">
-        <span style="width:7px;height:7px;border-radius:99px;background:${dirColor(plan.dir)}"></span>
-        <span class="sm" style="font-weight:500">${esc(plan.label)}</span>
-        ${dir ? `<span class="tiny dim">· ${esc(dir.name)}</span>` : ''}
+    <div class="spread" style="align-items:flex-start">
+      <div style="min-width:0;flex:1">
+        ${headPlan}
+        ${headCp}
       </div>
-      <span class="tiny mono dim">${doneCount}/${plan.tasks.length} 完成 · 共 ${totalMin} min</span>
+      <span class="tiny mono dim">${doneCount}/${totalCount} 完成 · 共 ${totalMin} min</span>
     </div>
     <div style="margin-top:10px">${meterHTML(pct, 'thin')}</div>
   </div>` : ''}
 
   <section class="section" style="margin-top:16px">
-    <div class="section-head"><div class="section-title">Mission</div></div>
-    <div class="grid" style="gap:8px">${tasksHTML}</div>
+    <div class="section-head">
+      <div class="section-title">Mission</div>
+      <button class="btn ghost sm" data-action="new-task" data-date="${date}">+ 添加今日任务</button>
+    </div>
+    ${plan ? `<div class="mission-group ${S.highlightSource === 'plan' ? 'section-highlight' : ''}" data-group="plan" style="margin-bottom:${cp ? '14px' : '0'}">
+      <div class="row" style="gap:8px;margin-bottom:8px;align-items:center">
+        <span style="width:6px;height:6px;border-radius:99px;background:${dirColor(plan.dir)}"></span>
+        <span class="tiny" style="font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-2)">${esc(plan.label)} · 默认计划</span>
+        <span class="tiny dim">${plan.tasks.length} 项 · ${plan.tasks.reduce((a,b)=>a+b.m,0)} min</span>
+      </div>
+      <div class="grid" style="gap:8px">${planTasksHTML}</div>
+    </div>` : ''}
+    ${cp ? `<div class="mission-group" data-group="custom">
+      <div class="row" style="gap:8px;margin-bottom:8px;align-items:center">
+        <span style="width:6px;height:6px;border-radius:99px;background:${cp.dir ? dirColor(cp.dir) : '#3fc7bd'}"></span>
+        <span class="tiny" style="font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-2)">${esc(cp.label || '自定义')} · 自定义日程</span>
+        <span class="tiny dim">${customTasks.length} 项 · ${customTasks.reduce((a,b)=>a+b.m,0)} min</span>
+      </div>
+      <div class="grid" style="gap:8px">${customTasksHTML}</div>
+    </div>
+    <div class="custom-plan-card ${S.highlightSource === 'custom' ? 'section-highlight' : ''}" data-group="custom-detail" style="margin-top:14px;border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;background:var(--panel)">
+      <div class="row" style="gap:10px;align-items:flex-start">
+        <span class="check ${day.cpDone ? 'on' : ''}" data-action="toggle-plan-done" data-date="${date}" role="button" tabindex="0" style="margin-top:3px;cursor:pointer">✓</span>
+        <div style="flex:1;min-width:0">
+          <div class="row" style="gap:8px;align-items:center">
+            <span class="sm" style="font-weight:600${day.cpDone ? ';text-decoration:line-through;opacity:.6' : ''}">${esc(cp.theme || '（无主题）')}</span>
+            <span class="tiny dim">${esc(cp.label || '自定义')}</span>
+          </div>
+          <div class="tiny dim" style="margin-top:4px">
+            ${cpDirName ? '方向：' + esc(cpDirName) + ' · ' : ''}${cpTaskCount} 项任务 · ${cpTaskMin} min · ${prettyFull(date)}
+          </div>
+        </div>
+        <span class="row" style="gap:6px;flex:0 0 auto">
+          <button class="btn ghost sm" data-action="new-task" data-date="${date}">+ 任务</button>
+          <button class="btn ghost sm" data-action="edit-plan" data-date="${date}">编辑</button>
+          <button class="btn ghost sm" data-action="del-plan" data-date="${date}" style="color:var(--danger)">删除</button>
+        </span>
+      </div>
+    </div>` : ''}
+    ${(!plan && !cp) ? `<div class="empty">这一天没有安排任务，可以上方添加自定义任务</div>` : ''}
   </section>
 
   <section class="section">
@@ -1371,17 +1478,27 @@ function renderCalendar(){
   for (let d = 1; d <= daysInMonth; d++){
     const dateStr = `${y}-${pad2(m+1)}-${pad2(d)}`;
     const plan = PLAN[dateStr];
+    const cp = S.customPlan[dateStr];
+    const hasAnything = !!(plan || cp);
     const isToday = dateStr === TODAY;
     const isActive = dateStr === S.activeDay;
-    const cls = ['cal-cell', plan ? 'has-plan' : '', isToday ? 'today' : '', isActive ? 'active' : ''].filter(Boolean).join(' ');
-    cells.push(`<div class="${cls}" ${plan ? `data-action="open-day" data-date="${dateStr}"` : ''} ${plan ? 'role="button" tabindex="0"' : ''}>
+    const cls = ['cal-cell', hasAnything ? 'has-plan' : '', isToday ? 'today' : '', isActive ? 'active' : ''].filter(Boolean).join(' ');
+    /* 主题优先显示 plan 的；只有 custom 时显示 cp.theme */
+    const themeText = (plan && plan.theme) || (cp && cp.theme) || '';
+    cells.push(`<div class="${cls}" ${hasAnything ? `data-action="open-day" data-date="${dateStr}"` : ''} ${hasAnything ? 'role="button" tabindex="0"' : ''}>
       ${isToday ? '<span class="cal-today-flag">TODAY</span>' : ''}
       <span class="cal-date">${d}</span>
-      ${plan ? `<span class="cal-pill"><span class="pd" style="background:${dirColor(plan.dir)}"></span>${esc(plan.label)}</span>
-      <span class="cal-theme">${esc(plan.theme)}</span>` : ''}
+      ${plan ? `<button class="cal-pill" data-action="open-day-plan" data-date="${dateStr}" title="${esc(plan.theme || '')} · 默认计划"><span class="pd" style="background:${dirColor(plan.dir)}"></span>${esc(plan.label)}</button>` : ''}
+      ${cp ? `<button class="cal-pill is-custom" data-action="open-day-custom" data-date="${dateStr}" title="${esc(cp.theme || '')} · 自定义日程"><span class="pd" style="background:${cp.dir ? dirColor(cp.dir) : '#3fc7bd'}"></span>${esc(cp.label || '自定义')}</button>` : ''}
+      ${themeText ? `<span class="cal-theme">${esc(themeText)}</span>` : ''}
     </div>`);
   }
   const monthName = first.toLocaleDateString('zh-CN', { year:'numeric', month:'long' });
+
+  /* 自定义日程按日期排序 */
+  const customPlans = Object.entries(S.customPlan || {})
+    .map(([d, p]) => ({ date: d, ...p }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   return `
   <div class="spread" style="margin-bottom:16px">
@@ -1431,6 +1548,41 @@ function renderCalendar(){
         </div>`;
       }).join('')}
     </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">自定义日程</div>
+        <div class="section-sub">在 4 周计划之外自己加的，可任意日期</div>
+      </div>
+      <button class="btn primary sm" data-action="new-plan">+ 添加日程</button>
+    </div>
+    ${customPlans.length ? `
+    <div class="card">
+      ${customPlans.map(p => {
+        const dirName = p.dir ? (dirById(p.dir) || {}).name : '';
+        const taskCount = (p.tasks || []).length;
+        return `<div class="row" style="gap:10px;padding:11px 0;border-bottom:1px solid var(--border);align-items:flex-start">
+          <span class="tiny mono dim" style="flex:0 0 56px;margin-top:2px">${p.date.slice(5)}</span>
+          <span style="width:6px;height:6px;border-radius:99px;background:${p.dir ? dirColor(p.dir) : 'var(--text-3)'};flex:0 0 6px;margin-top:7px"></span>
+          <div style="flex:1;min-width:0">
+            <div class="row" style="gap:8px">
+              <span class="sm" style="font-weight:500">${esc(p.theme || '（无主题）')}</span>
+              <span class="tiny dim">${esc(p.label || '自定义')}</span>
+            </div>
+            <div class="tiny dim" style="margin-top:3px">
+              ${dirName ? '方向：' + esc(dirName) + ' · ' : ''}任务 ${taskCount}
+            </div>
+          </div>
+          <span class="row" style="gap:6px;flex:0 0 auto">
+            <button class="btn ghost sm" data-action="open-day" data-date="${p.date}">查看</button>
+            <button class="btn ghost sm" data-action="edit-plan" data-date="${p.date}">编辑</button>
+            <button class="btn ghost sm" data-action="del-plan" data-date="${p.date}" style="color:var(--danger)">删除</button>
+          </span>
+        </div>`;
+      }).join('')}
+    </div>` : '<div class="empty">还没有自定义日程。点右上角添加一个，或在「今日探索」里直接添加今日任务。</div>'}
   </section>
   `;
 }
@@ -1997,20 +2149,37 @@ document.addEventListener('click', e => {
 
     case 'open-day':
       S.activeDay = el.dataset.date;
+      S.highlightSource = null;
       save(); go('#/today'); break;
+    case 'open-day-plan':
+      S.activeDay = el.dataset.date;
+      S.highlightSource = 'plan';
+      save(); go('#/today');
+      setTimeout(scrollToHighlight, 30);
+      break;
+    case 'open-day-custom':
+      S.activeDay = el.dataset.date;
+      S.highlightSource = 'custom';
+      save(); go('#/today');
+      setTimeout(scrollToHighlight, 30);
+      break;
 
     case 'jump-today': {
-      const target = PLAN[TODAY] ? TODAY : START_DATE;
-      S.activeDay = target; save(); render(); break;
+      const target = (PLAN[TODAY] || (S.customPlan && S.customPlan[TODAY])) ? TODAY : START_DATE;
+      S.activeDay = target; S.highlightSource = null; save(); render(); break;
     }
     case 'prev-day': {
-      const i = PLAN_DAYS.indexOf(S.activeDay);
-      S.activeDay = PLAN_DAYS[Math.max(0, i - 1)] || PLAN_DAYS[0];
+      const allDays = Array.from(new Set([...PLAN_DAYS, ...Object.keys(S.customPlan || {})])).sort();
+      const i = allDays.indexOf(S.activeDay);
+      S.activeDay = allDays[Math.max(0, i - 1)] || allDays[0];
+      S.highlightSource = null;
       save(); render(); break;
     }
     case 'next-day': {
-      const i = PLAN_DAYS.indexOf(S.activeDay);
-      S.activeDay = PLAN_DAYS[Math.min(PLAN_DAYS.length - 1, i + 1)] || PLAN_DAYS[PLAN_DAYS.length - 1];
+      const allDays = Array.from(new Set([...PLAN_DAYS, ...Object.keys(S.customPlan || {})])).sort();
+      const i = allDays.indexOf(S.activeDay);
+      S.activeDay = allDays[Math.min(allDays.length - 1, i + 1)] || allDays[allDays.length - 1];
+      S.highlightSource = null;
       save(); render(); break;
     }
 
@@ -2031,6 +2200,49 @@ document.addEventListener('click', e => {
       const day = getDay(date);
       day.done[idx] = !day.done[idx];
       save(); render(); break;
+    }
+    case 'new-task': openTaskModal(el.dataset.date, null); break;
+    case 'edit-task': openTaskModal(el.dataset.date, el.dataset.taskId); break;
+    case 'del-task': {
+      const date = el.dataset.date, taskId = el.dataset.taskId;
+      if (!date || !taskId) break;
+      confirmDialog({
+        title: '删除任务',
+        message: '确定要删除这个自定义任务吗？',
+        submitText: '删除',
+        onConfirm: () => {
+          const cp = S.customPlan[date];
+          if (cp){
+            cp.tasks = (cp.tasks || []).filter(t => t.id !== taskId);
+            if (!cp.tasks.length) delete S.customPlan[date];
+            save(); render();
+            toast('已删除', 'ok');
+          }
+        }
+      });
+      break;
+    }
+    case 'toggle-plan-done': {
+      const date = el.dataset.date, day = getDay(date);
+      day.cpDone = !day.cpDone;
+      save(); render(); break;
+    }
+    case 'new-plan': openPlanModal(el ? el.dataset.date : null, null); break;
+    case 'edit-plan': openPlanModal(null, el.dataset.date); break;
+    case 'del-plan': {
+      const date = el.dataset.date;
+      if (!date) break;
+      confirmDialog({
+        title: '删除日程',
+        message: `确定要删除 ${date} 的自定义日程吗？任务勾选状态会保留。`,
+        submitText: '删除',
+        onConfirm: () => {
+          delete S.customPlan[date];
+          save(); render();
+          toast('已删除日程', 'ok');
+        }
+      });
+      break;
     }
     case 'set-keep': {
       const v = Number(el.dataset.value);
@@ -2440,6 +2652,100 @@ function openQModal(id){
       toast(existing ? '已保存' : '已添加', 'ok');
     }
   });
+}
+
+/* ---------- 今日任务模态框（添加 / 编辑单条自定义任务） ---------- */
+function openTaskModal(date, taskId){
+  if (!date) return;
+  const cp = S.customPlan[date] || { dir:'', label:'自定义', theme:'自定义任务', tasks:[] };
+  const existing = taskId ? (cp.tasks || []).find(t => t.id === taskId) : null;
+  openModal({
+    title: existing ? '编辑任务' : '添加今日任务',
+    submitText: existing ? '保存' : '添加',
+    values: existing
+      ? { kind: existing.k, text: existing.t, minutes: existing.m }
+      : { kind: 'Build', minutes: 30 },
+    fields: [
+      { key:'kind', label:'类型', type:'select', options: [
+        { value:'Learn',   label:'Learn · 读 / 看' },
+        { value:'Build',   label:'Build · 动手做' },
+        { value:'Reflect', label:'Reflect · 反思' }
+      ] },
+      { key:'text', label:'任务描述', type:'textarea', required:true, placeholder:'例如：写一个能跑的 shader 入门例子' },
+      { key:'minutes', label:'预计分钟', type:'text', hint:'数字即可，例如 60' }
+    ],
+    onSubmit: data => {
+      const m = parseInt(data.minutes, 10) || 0;
+      if (!S.customPlan[date]){
+        S.customPlan[date] = { dir:'', label:'自定义', theme:'自定义任务', tasks:[] };
+      }
+      const target = S.customPlan[date];
+      if (existing){
+        const t = target.tasks.find(v => v.id === taskId);
+        if (t){ t.k = data.kind; t.t = data.text.trim(); t.m = m; }
+      } else {
+        target.tasks.push({ id: uid('t'), k: data.kind, t: data.text.trim(), m });
+      }
+      save(); render();
+      toast(existing ? '已保存' : '已添加任务', 'ok');
+    }
+  });
+}
+
+/* ---------- 日程模态框（在指定日期添加 / 编辑一整天的自定义日程） ---------- */
+function openPlanModal(defaultDate, editDate){
+  const date = editDate || defaultDate || isoOf(new Date());
+  const existing = editDate ? S.customPlan[editDate] : null;
+  const dirOptions = [{ value:'', label:'（无方向）' }].concat(
+    S.directions.map(d => ({ value: d.id, label: d.name }))
+  );
+  openModal({
+    title: existing ? `编辑日程 · ${date}` : `新建日程 · ${date}`,
+    submitText: existing ? '保存' : '创建',
+    values: existing
+      ? { date: editDate, dir: existing.dir || '', theme: existing.theme || '', label: existing.label || '自定义' }
+      : { date: date, dir: '', theme: '', label: '自定义' },
+    fields: [
+      { key:'date',  label:'日期', type:'date', required:true },
+      { key:'theme', label:'主题', type:'text', required:true, placeholder:'例如：补做一次 Stereo 实验' },
+      { key:'dir',   label:'关联方向（可选）', type:'select', options: dirOptions },
+      { key:'label', label:'短标签', type:'text', placeholder:'日历上的短文字，例如 补做' }
+    ],
+    onSubmit: data => {
+      const targetDate = data.date;
+      if (!targetDate){ toast('请选择日期', 'warn'); return; }
+      if (!S.customPlan[targetDate]){
+        S.customPlan[targetDate] = { dir:'', label:'自定义', theme:'', tasks:[] };
+      }
+      const target = S.customPlan[targetDate];
+      target.theme = data.theme.trim();
+      target.dir = data.dir || '';
+      target.label = data.label.trim() || '自定义';
+      if (existing && editDate && editDate !== targetDate){
+        S.customPlan[targetDate] = Object.assign({}, S.customPlan[editDate], {
+          theme: data.theme.trim(),
+          dir: data.dir || '',
+          label: data.label.trim() || '自定义'
+        });
+        delete S.customPlan[editDate];
+      }
+      save(); render();
+      toast(existing ? '已保存' : '已创建日程', 'ok');
+    }
+  });
+}
+
+/* ---------- 高亮滚动：从月历点击 pill 进入 today 后定位到对应组 ---------- */
+function scrollToHighlight(){
+  const sel = S.highlightSource === 'plan' ? '[data-group="plan"]'
+            : S.highlightSource === 'custom' ? '[data-group="custom-detail"]'
+            : null;
+  if (!sel) return;
+  const node = document.querySelector(sel);
+  if (!node) return;
+  try{
+    node.scrollIntoView({ behavior:'smooth', block:'center' });
+  }catch(e){ node.scrollIntoView(); }
 }
 
 /* ============================================================

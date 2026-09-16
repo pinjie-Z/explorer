@@ -19,18 +19,28 @@ EX.pages.calendar = function(){
   for (let d = 1; d <= daysInMonth; d++){
     const dateStr = `${y}-${U.pad2(m + 1)}-${U.pad2(d)}`;
     const plan = EX.PLAN[dateStr];
+    const cp = S.customPlan[dateStr];
+    const hasAnything = !!(plan || cp);
     const isToday = dateStr === today;
     const isActive = dateStr === S.activeDay;
-    const cls = ['cal-cell', plan ? 'has-plan' : '', isToday ? 'today' : '', isActive ? 'active' : ''].filter(Boolean).join(' ');
-    cells.push(`<div class="${cls}" ${plan ? `data-action="open-day" data-date="${dateStr}"` : ''} ${plan ? 'role="button" tabindex="0"' : ''}>
+    const cls = ['cal-cell', hasAnything ? 'has-plan' : '', isToday ? 'today' : '', isActive ? 'active' : ''].filter(Boolean).join(' ');
+    /* 主题优先显示 plan 的；只有 custom 时显示 cp.theme */
+    const themeText = (plan && plan.theme) || (cp && cp.theme) || '';
+    cells.push(`<div class="${cls}" ${hasAnything ? `data-action="open-day" data-date="${dateStr}"` : ''} ${hasAnything ? 'role="button" tabindex="0"' : ''}>
       ${isToday ? '<span class="cal-today-flag">TODAY</span>' : ''}
       <span class="cal-date">${d}</span>
-      ${plan ? `<span class="cal-pill"><span class="pd" style="background:${EX.dirColor(plan.dir)}"></span>${U.esc(plan.label)}</span>
-      <span class="cal-theme">${U.esc(plan.theme)}</span>` : ''}
+      ${plan ? `<button class="cal-pill" data-action="open-day-plan" data-date="${dateStr}" title="${U.esc(plan.theme || '')} · 默认计划"><span class="pd" style="background:${EX.dirColor(plan.dir)}"></span>${U.esc(plan.label)}</button>` : ''}
+      ${cp ? `<button class="cal-pill is-custom" data-action="open-day-custom" data-date="${dateStr}" title="${U.esc(cp.theme || '')} · 自定义日程"><span class="pd" style="background:${cp.dir ? EX.dirColor(cp.dir) : '#3fc7bd'}"></span>${U.esc(cp.label || '自定义')}</button>` : ''}
+      ${themeText ? `<span class="cal-theme">${U.esc(themeText)}</span>` : ''}
     </div>`);
   }
 
   const monthName = first.toLocaleDateString('zh-CN', { year:'numeric', month:'long' });
+
+  /* 自定义日程按日期排序 */
+  const customPlans = Object.entries(S.customPlan || {})
+    .map(([d, p]) => ({ date: d, ...p }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   return `
   <div class="spread" style="margin-bottom:16px">
@@ -80,6 +90,41 @@ EX.pages.calendar = function(){
         </div>`;
       }).join('')}
     </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <div>
+        <div class="section-title">自定义日程</div>
+        <div class="section-sub">在 4 周计划之外自己加的，可任意日期</div>
+      </div>
+      <button class="btn primary sm" data-action="new-plan">+ 添加日程</button>
+    </div>
+    ${customPlans.length ? `
+    <div class="card">
+      ${customPlans.map(p => {
+        const dirName = p.dir ? (S.directions.find(d => d.id === p.dir) || {}).name : '';
+        const taskCount = (p.tasks || []).length;
+        return `<div class="row" style="gap:10px;padding:11px 0;border-bottom:1px solid var(--border);align-items:flex-start">
+          <span class="tiny mono dim" style="flex:0 0 56px;margin-top:2px">${p.date.slice(5)}</span>
+          <span style="width:6px;height:6px;border-radius:99px;background:${p.dir ? EX.dirColor(p.dir) : 'var(--text-3)'};flex:0 0 6px;margin-top:7px"></span>
+          <div style="flex:1;min-width:0">
+            <div class="row" style="gap:8px">
+              <span class="sm" style="font-weight:500">${U.esc(p.theme || '（无主题）')}</span>
+              <span class="tiny dim">${U.esc(p.label || '自定义')}</span>
+            </div>
+            <div class="tiny dim" style="margin-top:3px">
+              ${dirName ? '方向：' + U.esc(dirName) + ' · ' : ''}任务 ${taskCount}
+            </div>
+          </div>
+          <span class="row" style="gap:6px;flex:0 0 auto">
+            <button class="btn ghost sm" data-action="open-day" data-date="${p.date}">查看</button>
+            <button class="btn ghost sm" data-action="edit-plan" data-date="${p.date}">编辑</button>
+            <button class="btn ghost sm" data-action="del-plan" data-date="${p.date}" style="color:var(--danger)">删除</button>
+          </span>
+        </div>`;
+      }).join('')}
+    </div>` : '<div class="empty">还没有自定义日程。点右上角添加一个，或在「今日探索」里直接添加今日任务。</div>'}
   </section>
   `;
 };

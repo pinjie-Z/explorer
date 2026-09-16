@@ -127,13 +127,23 @@ window.EX = window.EX || {};
     /* --- 页面跳转 --- */
     'open-dir': el => go('#/direction/' + el.dataset.id),
     'open-day': el => {
-      S.commit(s => { s.activeDay = el.dataset.date; });
+      S.commit(s => { s.activeDay = el.dataset.date; s.highlightSource = null; });
       go('#/today');
+    },
+    'open-day-plan': el => {
+      S.commit(s => { s.activeDay = el.dataset.date; s.highlightSource = 'plan'; });
+      go('#/today');
+      setTimeout(scrollToHighlight, 30);
+    },
+    'open-day-custom': el => {
+      S.commit(s => { s.activeDay = el.dataset.date; s.highlightSource = 'custom'; });
+      go('#/today');
+      setTimeout(scrollToHighlight, 30);
     },
     'jump-today': () => {
       const today = U.isoOf(new Date());
-      const target = EX.PLAN[today] ? today : '2026-09-11';
-      S.commit(s => { s.activeDay = target; });
+      const target = (EX.PLAN[today] || (S.get().customPlan && S.get().customPlan[today])) ? today : '2026-09-15';
+      S.commit(s => { s.activeDay = target; s.highlightSource = null; });
       render();
     },
     'prev-day': () => shiftDay(-1),
@@ -170,6 +180,28 @@ window.EX = window.EX || {};
         s.daily[date].done[idx] = !s.daily[date].done[idx];
       });
       render();
+    },
+    'new-task': el => openTaskModal(el.dataset.date),
+    'edit-task': el => openTaskModal(el.dataset.date, el.dataset.taskId),
+    'del-task': el => {
+      const date = el.dataset.date;
+      const taskId = el.dataset.taskId;
+      if (!date || !taskId) return;
+      UI.confirm({
+        title: '删除任务',
+        message: '确定要删除这个自定义任务吗？',
+        submitText: '删除',
+        onConfirm: () => {
+          S.commit(s => {
+            const cp = s.customPlan[date];
+            if (!cp) return;
+            cp.tasks = (cp.tasks || []).filter(t => t.id !== taskId);
+            if (!cp.tasks.length) delete s.customPlan[date];
+          });
+          UI.toast('已删除', 'ok');
+          render();
+        }
+      });
     },
     'set-keep': el => {
       const date = el.dataset.date;
@@ -325,6 +357,32 @@ window.EX = window.EX || {};
       render();
     },
 
+    /* --- 自定义日程 --- */
+    'toggle-plan-done': el => {
+      const date = el.dataset.date;
+      S.commit(s => {
+        if (!s.daily[date]) s.daily[date] = { done:{}, cpDone:false, discover:'', best:'', worst:'', keep:0, conclusion:'' };
+        s.daily[date].cpDone = !s.daily[date].cpDone;
+      });
+      render();
+    },
+    'new-plan': el => openPlanModal(el ? el.dataset.date : null),
+    'edit-plan': el => openPlanModal(null, el.dataset.date),
+    'del-plan': el => {
+      const date = el.dataset.date;
+      if (!date) return;
+      UI.confirm({
+        title: '删除日程',
+        message: `确定要删除 ${date} 的自定义日程吗？任务勾选状态会保留。`,
+        submitText: '删除',
+        onConfirm: () => {
+          S.commit(s => { delete s.customPlan[date]; });
+          UI.toast('已删除日程', 'ok');
+          render();
+        }
+      });
+    },
+
     /* --- 实验 --- */
     'new-exp': () => openExpModal(null),
     'edit-exp': el => openExpModal(el.dataset.id),
@@ -435,12 +493,16 @@ window.EX = window.EX || {};
 
   /* ---------- 日期前后切换 ---------- */
   function shiftDay(delta){
-    const dates = Object.keys(EX.PLAN).sort();
-    const cur = S.get().activeDay;
+    const S_ = S.get();
+    const dates = Array.from(new Set([
+      ...Object.keys(EX.PLAN),
+      ...Object.keys(S_.customPlan || {})
+    ])).sort();
+    const cur = S_.activeDay;
     const i = dates.indexOf(cur);
     const next = dates[U.clamp(i + delta, 0, dates.length - 1)];
     if (!next) return;
-    S.commit(s => { s.activeDay = next; });
+    S.commit(s => { s.activeDay = next; s.highlightSource = null; });
     render();
   }
 
@@ -580,6 +642,109 @@ window.EX = window.EX || {};
         render();
       }
     });
+  }
+
+  /* ---------- 今日任务模态框（添加 / 编辑单条自定义任务）---------- */
+  function openTaskModal(date, taskId){
+    const state = S.get();
+    if (!date) return;
+    const cp = state.customPlan[date] || { dir:'', label:'自定义', theme:'自定义任务', tasks:[] };
+    const existing = taskId ? (cp.tasks || []).find(t => t.id === taskId) : null;
+
+    UI.modal({
+      title: existing ? '编辑任务' : '添加今日任务',
+      submitText: existing ? '保存' : '添加',
+      values: existing
+        ? { kind: existing.k, text: existing.t, minutes: existing.m }
+        : { kind: 'Build', minutes: 30 },
+      fields: [
+        { key:'kind', label:'类型', type:'select', options: [
+          { value:'Learn',   label:'Learn · 读 / 看' },
+          { value:'Build',   label:'Build · 动手做' },
+          { value:'Reflect', label:'Reflect · 反思' }
+        ] },
+        { key:'text', label:'任务描述', type:'textarea', required:true, placeholder:'例如：写一个能跑的 shader 入门例子' },
+        { key:'minutes', label:'预计分钟', type:'text', hint:'数字即可，例如 60' }
+      ],
+      onSubmit: data => {
+        const m = parseInt(data.minutes, 10) || 0;
+        S.commit(s => {
+          if (!s.customPlan[date]){
+            s.customPlan[date] = { dir:'', label:'自定义', theme:'自定义任务', tasks:[] };
+          }
+          const target = s.customPlan[date];
+          if (existing){
+            const t = target.tasks.find(v => v.id === taskId);
+            if (t){ t.k = data.kind; t.t = data.text.trim(); t.m = m; }
+          } else {
+            target.tasks.push({ id: U.uid('t'), k: data.kind, t: data.text.trim(), m });
+          }
+        });
+        UI.toast(existing ? '已保存' : '已添加任务', 'ok');
+        render();
+      }
+    });
+  }
+
+  /* ---------- 日程模态框（在指定日期添加 / 编辑一整天的自定义日程）---------- */
+  function openPlanModal(defaultDate, editDate){
+    const state = S.get();
+    const date = editDate || defaultDate || U.isoOf(new Date());
+    const existing = editDate ? state.customPlan[editDate] : null;
+    const dirOptions = [{ value:'', label:'（无方向）' }].concat(
+      state.directions.map(d => ({ value: d.id, label: d.name }))
+    );
+
+    UI.modal({
+      title: existing ? `编辑日程 · ${date}` : `新建日程 · ${date}`,
+      submitText: existing ? '保存' : '创建',
+      values: existing
+        ? { dir: existing.dir || '', theme: existing.theme || '', label: existing.label || '自定义' }
+        : { dir: '', theme: '', label: '自定义' },
+      fields: [
+        { key:'date', label:'日期', type:'date', required:true },
+        { key:'theme', label:'主题', type:'text', required:true, placeholder:'例如：补做一次 Stereo 实验' },
+        { key:'dir', label:'关联方向（可选）', type:'select', options: dirOptions },
+        { key:'label', label:'短标签', type:'text', placeholder:'日历上的短文字，例如 补做' }
+      ],
+      onSubmit: data => {
+        const targetDate = data.date;
+        if (!targetDate){ UI.toast('请选择日期', 'warn'); return; }
+        S.commit(s => {
+          if (!s.customPlan[targetDate]){
+            s.customPlan[targetDate] = { dir:'', label:'自定义', theme:'', tasks:[] };
+          }
+          const target = s.customPlan[targetDate];
+          target.theme = data.theme.trim();
+          target.dir = data.dir || '';
+          target.label = data.label.trim() || '自定义';
+          /* 如果是编辑且日期变了，迁移 */
+          if (existing && editDate && editDate !== targetDate){
+            s.customPlan[targetDate] = Object.assign({}, s.customPlan[editDate], {
+              theme: data.theme.trim(),
+              dir: data.dir || '',
+              label: data.label.trim() || '自定义'
+            });
+            delete s.customPlan[editDate];
+          }
+        });
+        UI.toast(existing ? '已保存' : '已创建日程', 'ok');
+        render();
+      }
+    });
+  }
+
+  /* ---------- 高亮滚动：从月历点击 pill 进入 today 后定位到对应组 ---------- */
+  function scrollToHighlight(){
+    const hs = S.get().highlightSource;
+    const sel = hs === 'plan' ? '[data-group="plan"]'
+              : hs === 'custom' ? '[data-group="custom-detail"]'
+              : null;
+    if (!sel) return;
+    const node = document.querySelector(sel);
+    if (!node) return;
+    try { node.scrollIntoView({ behavior:'smooth', block:'center' }); }
+    catch(e){ node.scrollIntoView(); }
   }
 
   /* ============================================================

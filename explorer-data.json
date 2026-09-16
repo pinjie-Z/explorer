@@ -4,11 +4,20 @@
   },
   "theme": "dark",
   "startDate": "2026-09-15",
-  "activeDay": "2026-09-15",
+  "activeDay": "2026-09-16",
   "calView": {
     "y": 2026,
     "m": 8
   },
+  "customPlan": {
+    "2026-09-16": {
+      "dir": "",
+      "label": "作业",
+      "theme": "完成洛谷入门20题",
+      "tasks": []
+    }
+  },
+  "highlightSource": "custom",
   "directions": [
     {
       "id": "vision3d",
@@ -355,6 +364,34 @@
       "done": {
         "0": false
       },
+      "discover": "",
+      "best": "",
+      "worst": "",
+      "keep": 0,
+      "conclusion": ""
+    },
+    "2026-09-16": {
+      "done": {
+        "0": false,
+        "2": false
+      },
+      "discover": "",
+      "best": "",
+      "worst": "",
+      "keep": 0,
+      "conclusion": "",
+      "cpDone": false
+    },
+    "2026-09-23": {
+      "done": {},
+      "discover": "",
+      "best": "",
+      "worst": "",
+      "keep": 0,
+      "conclusion": ""
+    },
+    "2026-10-12": {
+      "done": {},
       "discover": "",
       "best": "",
       "worst": "",

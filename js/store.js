@@ -53,6 +53,12 @@ EX.store = (function(){
     out.calView = Object.assign(base.calView, parsed.calView || {});
     out.decision = Object.assign(base.decision, parsed.decision || {});
     out.daily = parsed.daily || {};
+    out.customPlan = parsed.customPlan && typeof parsed.customPlan === 'object' ? parsed.customPlan : {};
+    out.highlightSource = (parsed.highlightSource === 'plan' || parsed.highlightSource === 'custom') ? parsed.highlightSource : null;
+    /* 迁移：旧版本 activeDay 可能指向新计划里已不存在的日期，做一次兜底 */
+    if (!EX.PLAN[out.activeDay] && !out.customPlan[out.activeDay]) {
+      out.activeDay = EX.DEFAULT.startDate;
+    }
     out.directions = (parsed.directions || base.directions).map(d => ({
       id: d.id || U.uid('d'),
       name: d.name || '未命名方向',

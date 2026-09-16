@@ -36,10 +36,10 @@ EX.SCORE_KEYS = [
 
 /* ---------- 4 周结构 ---------- */
 EX.WEEKS = [
-  { n:1, name:'Map the Territory', from:'2026-09-07', to:'2026-09-13' },
-  { n:2, name:'Build & Break',      from:'2026-09-14', to:'2026-09-20' },
-  { n:3, name:'Try the Work',       from:'2026-09-21', to:'2026-09-27' },
-  { n:4, name:'Decide',             from:'2026-09-28', to:'2026-10-04' }
+  { n:1, name:'Map the Territory', from:'2026-09-15', to:'2026-09-21' },
+  { n:2, name:'Build & Break',      from:'2026-09-22', to:'2026-09-28' },
+  { n:3, name:'Try the Work',       from:'2026-09-29', to:'2026-10-05' },
+  { n:4, name:'Decide',             from:'2026-10-06', to:'2026-10-12' }
 ];
 
 /* ---------- 页面标题 ---------- */
@@ -58,106 +58,106 @@ EX.TITLES = {
 /* ---------- 每日计划 ---------- */
 EX.PLAN = {
   /* Week 1 · Map the Territory */
-  '2026-09-07': { dir:'ai', label:'AI', theme:'AI 全景地图', tasks:[
+  '2026-09-15': { dir:'ai', label:'AI', theme:'AI 全景地图', tasks:[
     { k:'Learn',   t:'读一篇 AI 工程综述，列出 10 个子领域', m:30 },
     { k:'Build',   t:'跑通一个 LLM API demo，改 3 个参数', m:90 },
     { k:'Reflect', t:'我对「模型」还是「产品」更兴奋？', m:10 } ] },
-  '2026-09-08': { dir:'ai', label:'AI', theme:'AI Product', tasks:[
+  '2026-09-16': { dir:'ai', label:'AI', theme:'AI Product', tasks:[
     { k:'Learn',   t:'拆解 3 个 AI 产品的真实交互', m:30 },
     { k:'Build',   t:'做一个最小 AI 工作流原型', m:90 },
     { k:'Reflect', t:'这个方向我愿意做 3 年吗？', m:10 } ] },
-  '2026-09-09': { dir:'cv', label:'CV', theme:'Computer Vision', tasks:[
+  '2026-09-17': { dir:'cv', label:'CV', theme:'Computer Vision', tasks:[
     { k:'Learn',   t:'卷积 / 特征 / 检测的基本脉络', m:30 },
     { k:'Build',   t:'跑一个预训练检测模型，换自己的图', m:90 },
     { k:'Reflect', t:'视觉任务的哪一部分最吸引我？', m:10 } ] },
-  '2026-09-10': { dir:'vision3d', label:'3D', theme:'3D Vision 入门', tasks:[
+  '2026-09-18': { dir:'vision3d', label:'3D', theme:'3D Vision 入门', tasks:[
     { k:'Learn',   t:'相机模型、内外参、极线几何', m:40 },
     { k:'Build',   t:'用 OpenCV 做一次双目深度估计', m:80 },
     { k:'Reflect', t:'数学让我兴奋还是痛苦？', m:10 } ] },
-  '2026-09-11': { dir:'graphics', label:'Graphics', theme:'Graphics 一瞥', tasks:[
+  '2026-09-19': { dir:'graphics', label:'Graphics', theme:'Graphics 一瞥', tasks:[
     { k:'Learn',   t:'光栅化管线：顶点 → 片元 → 像素', m:30 },
     { k:'Build',   t:'写第一个能动的 shader', m:90 },
     { k:'Reflect', t:'渲染的哪一步让我想继续？', m:10 } ] },
-  '2026-09-12': { dir:'xr', label:'XR', theme:'XR / Spatial', tasks:[
+  '2026-09-20': { dir:'xr', label:'XR', theme:'XR / Spatial', tasks:[
     { k:'Learn',   t:'AR / VR / MR 的技术边界', m:30 },
     { k:'Build',   t:'做一个 WebXR 最小场景', m:80 },
     { k:'Reflect', t:'XR 是真需求还是概念？', m:10 } ] },
-  '2026-09-13': { dir:'review', label:'Review', theme:'Week 1 复盘', tasks:[
+  '2026-09-21': { dir:'review', label:'Review', theme:'Week 1 复盘', tasks:[
     { k:'Reflect', t:'写出本周最兴奋的 3 个瞬间', m:20 },
     { k:'Reflect', t:'更新方向矩阵的分数', m:20 } ] },
 
   /* Week 2 · Build & Break */
-  '2026-09-14': { dir:'build', label:'Build', theme:'Gaussian Splatting', tasks:[
+  '2026-09-22': { dir:'build', label:'Build', theme:'Gaussian Splatting', tasks:[
     { k:'Learn',   t:'3DGS 为什么比 NeRF 快', m:30 },
     { k:'Build',   t:'用手机照片训练一个 3DGS 场景', m:120 },
     { k:'Reflect', t:'环境配置的痛苦 vs 看到结果的爽', m:10 } ] },
-  '2026-09-15': { dir:'build', label:'Build', theme:'NeRF 复现', tasks:[
+  '2026-09-23': { dir:'build', label:'Build', theme:'NeRF 复现', tasks:[
     { k:'Learn',   t:'体渲染与位置编码', m:30 },
     { k:'Build',   t:'复现一个最小 NeRF', m:120 },
     { k:'Reflect', t:'我是在享受过程还是只想看到结果？', m:10 } ] },
-  '2026-09-16': { dir:'build', label:'Build', theme:'Shader 入门', tasks:[
+  '2026-09-24': { dir:'build', label:'Build', theme:'Shader 入门', tasks:[
     { k:'Learn',   t:'GLSL 基础语法与坐标空间', m:30 },
     { k:'Build',   t:'写一个实时光照材质', m:100 },
     { k:'Reflect', t:'图形学的手感如何？', m:10 } ] },
-  '2026-09-17': { dir:'product', label:'Agent', theme:'Agent 实验', tasks:[
+  '2026-09-25': { dir:'product', label:'Agent', theme:'Agent 实验', tasks:[
     { k:'Learn',   t:'Tool use / Planning / Memory 三件事', m:30 },
     { k:'Build',   t:'做一个能查资料并写报告的 Agent', m:110 },
     { k:'Reflect', t:'我更想做模型还是做调度？', m:10 } ] },
-  '2026-09-18': { dir:'product', label:'Product', theme:'AI 产品原型', tasks:[
+  '2026-09-26': { dir:'product', label:'Product', theme:'AI 产品原型', tasks:[
     { k:'Learn',   t:'一个 AI 产品的 5 个关键决策', m:20 },
     { k:'Build',   t:'给自己的痛点做一个小工具', m:110 },
     { k:'Reflect', t:'用户反馈会让我兴奋吗？', m:10 } ] },
-  '2026-09-19': { dir:'graphics', label:'Graphics', theme:'渲染管线', tasks:[
+  '2026-09-27': { dir:'graphics', label:'Graphics', theme:'渲染管线', tasks:[
     { k:'Learn',   t:'延迟渲染 / 前向渲染的区别', m:30 },
     { k:'Build',   t:'实现一个多光源场景', m:100 },
     { k:'Reflect', t:'工程复杂度是否劝退我？', m:10 } ] },
-  '2026-09-20': { dir:'review', label:'Review', theme:'Week 2 复盘', tasks:[
+  '2026-09-28': { dir:'review', label:'Review', theme:'Week 2 复盘', tasks:[
     { k:'Reflect', t:'哪个实验让我忘记看时间？', m:20 },
     { k:'Reflect', t:'更新方向矩阵', m:20 } ] },
 
   /* Week 3 · Try the Work */
-  '2026-09-21': { dir:'career', label:'Career', theme:'AI Engineer 的一天', tasks:[
+  '2026-09-29': { dir:'career', label:'Career', theme:'AI Engineer 的一天', tasks:[
     { k:'Learn',   t:'读 3 份 AI Engineer JD，圈出重复要求', m:30 },
     { k:'Build',   t:'模拟：给一个模型加 eval 与监控', m:90 },
     { k:'Reflect', t:'这份工作的日常我受得了吗？', m:15 } ] },
-  '2026-09-22': { dir:'career', label:'Career', theme:'3D Vision Engineer 的一天', tasks:[
+  '2026-09-30': { dir:'career', label:'Career', theme:'3D Vision Engineer 的一天', tasks:[
     { k:'Learn',   t:'看一个 3D 重建项目的工作流', m:30 },
     { k:'Build',   t:'模拟：把重建结果接进一个可视化工具', m:90 },
     { k:'Reflect', t:'我更喜欢算法还是管线？', m:15 } ] },
-  '2026-09-23': { dir:'career', label:'Career', theme:'Graphics Engineer 的一天', tasks:[
+  '2026-10-01': { dir:'career', label:'Career', theme:'Graphics Engineer 的一天', tasks:[
     { k:'Learn',   t:'引擎里图形工程师的真实任务', m:30 },
     { k:'Build',   t:'模拟：优化一个渲染 pass 的性能', m:90 },
     { k:'Reflect', t:'性能优化的爽感 vs 枯燥感', m:15 } ] },
-  '2026-09-24': { dir:'vision3d', label:'Vision', theme:'Stereo 深入', tasks:[
+  '2026-10-02': { dir:'vision3d', label:'Vision', theme:'Stereo 深入', tasks:[
     { k:'Learn',   t:'代价体 / 视差 / 亚像素', m:40 },
     { k:'Build',   t:'自己实现一个块匹配深度图', m:90 },
     { k:'Reflect', t:'推导和调参哪个更让我投入？', m:10 } ] },
-  '2026-09-25': { dir:'graphics', label:'Graphics', theme:'实时光照', tasks:[
+  '2026-10-03': { dir:'graphics', label:'Graphics', theme:'实时光照', tasks:[
     { k:'Learn',   t:'PBR 的核心直觉', m:30 },
     { k:'Build',   t:'实现一个 PBR 材质球', m:100 },
     { k:'Reflect', t:'视觉反馈对我有多重要？', m:10 } ] },
-  '2026-09-26': { dir:'xr', label:'XR', theme:'WebXR Demo', tasks:[
+  '2026-10-04': { dir:'xr', label:'XR', theme:'WebXR Demo', tasks:[
     { k:'Learn',   t:'空间交互的设计约束', m:30 },
     { k:'Build',   t:'做一个可抓取的 WebXR 物体', m:100 },
     { k:'Reflect', t:'XR 离「有用」还有多远？', m:10 } ] },
-  '2026-09-27': { dir:'review', label:'Review', theme:'Week 3 复盘', tasks:[
+  '2026-10-05': { dir:'review', label:'Review', theme:'Week 3 复盘', tasks:[
     { k:'Reflect', t:'模拟职业里哪个最像「我」？', m:20 },
     { k:'Reflect', t:'更新方向矩阵', m:20 } ] },
 
   /* Week 4 · Decide */
-  '2026-09-28': { dir:'decide', label:'Decide', theme:'整理证据', tasks:[
+  '2026-10-06': { dir:'decide', label:'Decide', theme:'整理证据', tasks:[
     { k:'Reflect', t:'把 4 周的实验结论汇总成一张表', m:40 } ] },
-  '2026-09-29': { dir:'decide', label:'Decide', theme:'方向矩阵终评', tasks:[
+  '2026-10-07': { dir:'decide', label:'Decide', theme:'方向矩阵终评', tasks:[
     { k:'Reflect', t:'给每个方向重新打分并写理由', m:40 } ] },
-  '2026-09-30': { dir:'decide', label:'Decide', theme:'写决策文档', tasks:[
+  '2026-10-08': { dir:'decide', label:'Decide', theme:'写决策文档', tasks:[
     { k:'Reflect', t:'当前假设 / 最大不确定性 / 下一步', m:50 } ] },
-  '2026-10-01': { dir:'next', label:'Next', theme:'设计下一个实验', tasks:[
+  '2026-10-09': { dir:'next', label:'Next', theme:'设计下一个实验', tasks:[
     { k:'Reflect', t:'下一个 4–8 周验证什么？', m:40 } ] },
-  '2026-10-02': { dir:'next', label:'Next', theme:'资源与路径', tasks:[
+  '2026-10-10': { dir:'next', label:'Next', theme:'资源与路径', tasks:[
     { k:'Learn',   t:'列出需要的课程 / 项目 / 人脉', m:40 } ] },
-  '2026-10-03': { dir:'next', label:'Next', theme:'缓冲', tasks:[
+  '2026-10-11': { dir:'next', label:'Next', theme:'缓冲', tasks:[
     { k:'Reflect', t:'补上前面欠下的实验', m:60 } ] },
-  '2026-10-04': { dir:'review', label:'Review', theme:'总复盘', tasks:[
+  '2026-10-12': { dir:'review', label:'Review', theme:'总复盘', tasks:[
     { k:'Reflect', t:'4 周前后，我变了什么？', m:40 } ] }
 };
 
@@ -165,28 +165,30 @@ EX.PLAN = {
 EX.DEFAULT = {
   meta: { version: 2 },
   theme: 'dark',
-  startDate: '2026-09-07',
-  activeDay: '2026-09-11',
+  startDate: '2026-09-15',
+  activeDay: '2026-09-15',
   calView: { y: 2026, m: 8 },
+  customPlan: {},
+  highlightSource: null,
   directions: [
     { id:'vision3d', name:'3D Vision', emoji:'🧠',
       tags:['Computer Vision','Reconstruction','NeRF','Gaussian Splatting'],
       blurb:'如何从 2D 图像真正理解 3D 世界。',
       scores:{ interest:5, curiosity:5, continue:5, build:5, math:4, research:5, product:3, career:5 },
       log:[
-        { id:'l1', d:'2026-09-11', t:'3D Gaussian Splatting 小实验：第一次看到自己生成的场景' },
-        { id:'l2', d:'2026-09-09', t:'Stereo Vision 深度图，调参调到怀疑人生但很有感觉' }
+        { id:'l1', d:'2026-09-19', t:'3D Gaussian Splatting 小实验：第一次看到自己生成的场景' },
+        { id:'l2', d:'2026-09-17', t:'Stereo Vision 深度图，调参调到怀疑人生但很有感觉' }
       ] },
     { id:'ai', name:'AI Engineering', emoji:'⚡',
       tags:['LLM','Agent','RAG','Multimodal'],
       blurb:'把模型变成能用的东西，而不是只跑 benchmark。',
       scores:{ interest:5, curiosity:4, continue:4, build:5, math:3, research:4, product:4, career:5 },
-      log:[ { id:'l3', d:'2026-09-07', t:'跑通 LLM API，理解 temperature 的真实影响' } ] },
+      log:[ { id:'l3', d:'2026-09-15', t:'跑通 LLM API，理解 temperature 的真实影响' } ] },
     { id:'product', name:'AI Product', emoji:'🎯',
       tags:['AI Application','Agent','UX'],
       blurb:'AI 能力与真实用户痛点之间的那层翻译。',
       scores:{ interest:5, curiosity:4, continue:4, build:5, math:2, research:3, product:5, career:5 },
-      log:[ { id:'l4', d:'2026-09-08', t:'拆解 3 个 AI 产品的交互，发现很多只是套壳' } ] },
+      log:[ { id:'l4', d:'2026-09-16', t:'拆解 3 个 AI 产品的交互，发现很多只是套壳' } ] },
     { id:'xr', name:'XR / Spatial', emoji:'🥽',
       tags:['AR','VR','Spatial Computing'],
       blurb:'把计算放进真实空间里，交互问题比渲染问题更难。',
@@ -209,19 +211,19 @@ EX.DEFAULT = {
       log:[] }
   ],
   experiments: [
-    { id:'x1', title:'Gaussian Splatting 小实验', dir:'vision3d', status:'done', date:'2026-09-11',
+    { id:'x1', title:'Gaussian Splatting 小实验', dir:'vision3d', status:'done', date:'2026-09-19',
       hyp:'能不能用手机拍的几十张照片重建出一个可以自由旋转的场景？',
       problem:'CUDA 与 PyTorch 版本冲突，环境配了 3 小时。',
       result:'终于跑通，第一次看到自己生成的 3D 场景。',
       reflect:'配置环境极其痛苦，但看到结果的一瞬间全值了。我可能真的喜欢 3D Vision。',
       score:5 },
-    { id:'x2', title:'AI Product 原型', dir:'product', status:'done', date:'2026-09-08',
+    { id:'x2', title:'AI Product 原型', dir:'product', status:'done', date:'2026-09-16',
       hyp:'给自己做一个真正会用的小工具，能坚持用超过 3 天吗？',
       problem:'功能想太多，第一版做了两天没做完。',
       result:'砍到只剩一个功能后，确实每天都用。',
       reflect:'我享受「有人真的在用」的感觉，超过享受模型本身。',
       score:4 },
-    { id:'x3', title:'Stereo Vision 深度图', dir:'vision3d', status:'done', date:'2026-09-09',
+    { id:'x3', title:'Stereo Vision 深度图', dir:'vision3d', status:'done', date:'2026-09-17',
       hyp:'自己实现块匹配，能不能得到可用的深度图？',
       problem:'纹理稀疏区域全是空洞，参数怎么调都不对。',
       result:'调了 40 分钟参数后勉强可用。',
