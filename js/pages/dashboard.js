@@ -26,10 +26,91 @@ EX.pages.dashboard = function(){
   const expCards = S.experiments.slice(0, 2).map(expCardHTML).join('');
 
   return `
-  <section class="hero">
-    <h1>🌌Per aspera ad astra.</h1>
-    <p>实验、记录、判断。</p>
-  </section>
+<section class="hero">
+  <div class="row" style="gap:16px;align-items:center">
+    <div style="width:56px;height:56px;flex:0 0 56px;border-radius:14px;overflow:hidden;box-shadow:0 4px 20px -4px var(--accent)">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="56" height="56">
+        <defs>
+          <radialGradient id="sky" cx="50%" cy="35%" r="85%">
+            <stop offset="0%"   stop-color="#232a5c"/>
+            <stop offset="55%"  stop-color="#111327"/>
+            <stop offset="100%" stop-color="#07080f"/>
+          </radialGradient>
+
+          <linearGradient id="starFill" x1="50%" y1="0%" x2="50%" y2="100%">
+            <stop offset="0%"   stop-color="#ffffff"/>
+            <stop offset="45%"  stop-color="#dfe4ff"/>
+            <stop offset="100%" stop-color="#6f7bf7"/>
+          </linearGradient>
+
+          <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#8f9bff" stop-opacity="0.55"/>
+            <stop offset="50%"  stop-color="#6f7bf7" stop-opacity="0.14"/>
+            <stop offset="100%" stop-color="#6f7bf7" stop-opacity="0"/>
+          </radialGradient>
+
+          <radialGradient id="nebula" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#a06ff7" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#a06ff7" stop-opacity="0"/>
+          </radialGradient>
+
+          <!-- 四角星形状：以原点为中心，半径 10 -->
+          <path id="spark"
+                d="M0 -10
+                   C 1.1 -2.8  2.8 -1.1  10  0
+                   C 2.8  1.1  1.1  2.8   0 10
+                   C -1.1 2.8 -2.8  1.1 -10  0
+                   C -2.8 -1.1 -1.1 -2.8   0 -10 Z"/>
+        </defs>
+
+        <!-- 深空底 -->
+        <rect width="64" height="64" rx="14" fill="url(#sky)"/>
+
+        <!-- 星云光晕 -->
+        <ellipse cx="20" cy="46" rx="30" ry="14"
+                 fill="url(#nebula)" transform="rotate(-22 20 46)"/>
+
+        <!-- 中央主星光晕 -->
+        <circle cx="32" cy="32" r="24" fill="url(#halo)"/>
+
+        <!-- ============ 四角星：由小到大 ============ -->
+        <!-- 远处微星 -->
+        <use href="#spark" transform="translate(40 8)  scale(0.26)" fill="#dfe4ff" opacity="0.50"/>
+        <use href="#spark" transform="translate(9 30)  scale(0.28)" fill="#ffffff" opacity="0.55"/>
+        <use href="#spark" transform="translate(56 36) scale(0.34)" fill="#dfe4ff" opacity="0.70"/>
+        <use href="#spark" transform="translate(17 53) scale(0.40)" fill="#ffffff" opacity="0.62"/>
+
+        <!-- 中景 -->
+        <use href="#spark" transform="translate(13 13) scale(0.48)" fill="#ffffff" opacity="0.88"/>
+        <use href="#spark" transform="translate(48 52) scale(0.56)" fill="#dfe4ff" opacity="0.80"/>
+        <use href="#spark" transform="translate(51 12) scale(0.72)" fill="#ffffff" opacity="0.94"/>
+        <use href="#spark" transform="translate(9 46)  scale(0.42)" fill="#dfe4ff" opacity="0.65"/>
+
+        <!-- 中央主星 -->
+        <use href="#spark" transform="translate(32 32) scale(2.10)" fill="url(#starFill)"/>
+
+        <!-- ============ 普通圆点星 ============ -->
+        <circle cx="24" cy="18" r="0.85" fill="#ffffff" opacity="0.75"/>
+        <circle cx="44" cy="24" r="0.70" fill="#dfe4ff" opacity="0.60"/>
+        <circle cx="18" cy="42" r="0.60" fill="#ffffff" opacity="0.50"/>
+        <circle cx="36" cy="56" r="0.70" fill="#ffffff" opacity="0.60"/>
+        <circle cx="58" cy="20" r="0.60" fill="#dfe4ff" opacity="0.50"/>
+        <circle cx="6"  cy="48" r="0.55" fill="#ffffff" opacity="0.45"/>
+        <circle cx="30" cy="58" r="0.60" fill="#dfe4ff" opacity="0.50"/>
+        <circle cx="60" cy="48" r="0.50" fill="#ffffff" opacity="0.40"/>
+        <circle cx="42" cy="40" r="0.55" fill="#ffffff" opacity="0.45"/>
+        <circle cx="22" cy="26" r="0.55" fill="#dfe4ff" opacity="0.45"/>
+
+        <!-- 主星星核 -->
+        <circle cx="32" cy="32" r="2.4" fill="#ffffff"/>
+      </svg>
+    </div>
+    <div>
+      <h1 style="margin:0 0 4px">Per aspera ad astra.</h1>
+      <p>实验、记录、判断。</p>
+    </div>
+  </div>
+</section>
 
   <div class="grid g3" style="margin-top:14px">
     <div class="stat"><div class="stat-val">${elapsed}</div><div class="stat-lab">探索天数</div></div>

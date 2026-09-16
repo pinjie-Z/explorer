@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "version": 3
+  },
+  "theme": "dark",
+  "startDate": "2026-09-15",
+  "activeDay": "2026-09-15",
+  "calView": {
+    "y": 2026,
+    "m": 8
+  },
+  "directions": [
+    {
+      "id": "vision3d",
+      "name": "3D Vision",
+      "emoji": "🧠",
+      "tags": [
+        "Computer Vision",
+        "Reconstruction",
+        "NeRF",
+        "Gaussian Splatting"
+      ],
+      "blurb": "如何从 2D 图像真正理解 3D 世界。",
+      "scores": {
+        "interest": 5,
+        "curiosity": 5,
+        "continue": 5,
+        "build": 5,
+        "math": 4,
+        "research": 5,
+        "product": 3,
+        "career": 5
+      },
+      "log": [
+        {
+          "id": "l1",
+          "d": "2026-09-18",
+          "t": "3D Gaussian Splatting 小实验：第一次看到自己生成的场景"
+        },
+        {
+          "id": "l2",
+          "d": "2026-09-17",
+          "t": "Stereo Vision 深度图，调参调到怀疑人生但很有感觉"
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "name": "AI Engineering",
+      "emoji": "⚡",
+      "tags": [
+        "LLM",
+        "Agent",
+        "RAG",
+        "Multimodal"
+      ],
+      "blurb": "把模型变成能用的东西，而不是只跑 benchmark。",
+      "scores": {
+        "interest": 5,
+        "curiosity": 4,
+        "continue": 4,
+        "build": 5,
+        "math": 3,
+        "research": 4,
+        "product": 4,
+        "career": 5
+      },
+      "log": [
+        {
+          "id": "l3",
+          "d": "2026-09-15",
+          "t": "跑通 LLM API，理解 temperature 的真实影响"
+        }
+      ]
+    },
+    {
+      "id": "product",
+      "name": "AI Product",
+      "emoji": "🎯",
+      "tags": [
+        "AI Application",
+        "Agent",
+        "UX"
+      ],
+      "blurb": "AI 能力与真实用户痛点之间的那层翻译。",
+      "scores": {
+        "interest": 5,
+        "curiosity": 4,
+        "continue": 4,
+        "build": 5,
+        "math": 2,
+        "research": 3,
+        "product": 5,
+        "career": 5
+      },
+      "log": [
+        {
+          "id": "l4",
+          "d": "2026-09-16",
+          "t": "拆解 3 个 AI 产品的交互，发现很多只是套壳"
+        }
+      ]
+    },
+    {
+      "id": "xr",
+      "name": "XR / Spatial",
+      "emoji": "🥽",
+      "tags": [
+        "AR",
+        "VR",
+        "Spatial Computing"
+      ],
+      "blurb": "把计算放进真实空间里，交互问题比渲染问题更难。",
+      "scores": {
+        "interest": 4,
+        "curiosity": 5,
+        "continue": 4,
+        "build": 4,
+        "math": 3,
+        "research": 4,
+        "product": 4,
+        "career": 4
+      },
+      "log": []
+    },
+    {
+      "id": "graphics",
+      "name": "Graphics",
+      "emoji": "🎨",
+      "tags": [
+        "Rendering",
+        "Shader",
+        "Geometry",
+        "Simulation"
+      ],
+      "blurb": "在有限算力里造出可信的视觉世界。",
+      "scores": {
+        "interest": 4,
+        "curiosity": 4,
+        "continue": 4,
+        "build": 5,
+        "math": 5,
+        "research": 4,
+        "product": 2,
+        "career": 4
+      },
+      "log": []
+    },
+    {
+      "id": "display",
+      "name": "Computational Display",
+      "emoji": "🔬",
+      "tags": [
+        "三维显示",
+        "Light Field",
+        "Holographic"
+      ],
+      "blurb": "光学、感知与计算的交叉地带。",
+      "scores": {
+        "interest": 4,
+        "curiosity": 4,
+        "continue": 3,
+        "build": 3,
+        "math": 4,
+        "research": 4,
+        "product": 2,
+        "career": 3
+      },
+      "log": []
+    },
+    {
+      "id": "robotics",
+      "name": "Robotics",
+      "emoji": "🤖",
+      "tags": [
+        "Perception",
+        "Embodied AI"
+      ],
+      "blurb": "让智能体在物理世界里做事。",
+      "scores": {
+        "interest": 3,
+        "curiosity": 4,
+        "continue": 3,
+        "build": 3,
+        "math": 4,
+        "research": 4,
+        "product": 2,
+        "career": 3
+      },
+      "log": []
+    }
+  ],
+  "experiments": [
+    {
+      "id": "x1",
+      "title": "Gaussian Splatting 小实验",
+      "dir": "vision3d",
+      "status": "done",
+      "date": "2026-09-18",
+      "hyp": "能不能用手机拍的几十张照片重建出一个可以自由旋转的场景？",
+      "problem": "CUDA 与 PyTorch 版本冲突，环境配了 3 小时。",
+      "result": "终于跑通，第一次看到自己生成的 3D 场景。",
+      "reflect": "配置环境极其痛苦，但看到结果的一瞬间全值了。我可能真的喜欢 3D Vision。",
+      "score": 5
+    },
+    {
+      "id": "x2",
+      "title": "AI Product 原型",
+      "dir": "product",
+      "status": "done",
+      "date": "2026-09-16",
+      "hyp": "给自己做一个真正会用的小工具，能坚持用超过 3 天吗？",
+      "problem": "功能想太多，第一版做了两天没做完。",
+      "result": "砍到只剩一个功能后，确实每天都用。",
+      "reflect": "我享受「有人真的在用」的感觉，超过享受模型本身。",
+      "score": 4
+    },
+    {
+      "id": "x3",
+      "title": "Stereo Vision 深度图",
+      "dir": "vision3d",
+      "status": "done",
+      "date": "2026-09-17",
+      "hyp": "自己实现块匹配，能不能得到可用的深度图？",
+      "problem": "纹理稀疏区域全是空洞，参数怎么调都不对。",
+      "result": "调了 40 分钟参数后勉强可用。",
+      "reflect": "调参让我烦躁，但推导几何关系让我很投入。",
+      "score": 4
+    },
+    {
+      "id": "x4",
+      "title": "Shader 第一课",
+      "dir": "graphics",
+      "status": "done",
+      "date": "",
+      "hyp": "写一个能动的东西，会不会比调模型更有成就感？",
+      "problem": "",
+      "result": "",
+      "reflect": "",
+      "score": 0
+    }
+  ],
+  "career": [
+    {
+      "id": "c1",
+      "name": "AI Engineer",
+      "dir": "ai",
+      "fit": 4,
+      "real": "把模型接进产品：调 prompt、做 eval、搭检索管线、盯延迟和成本。",
+      "tryIt": "用 2 小时给一个开源模型接上你自己的数据，并写 5 条测试用例。"
+    },
+    {
+      "id": "c2",
+      "name": "3D Vision Engineer",
+      "dir": "vision3d",
+      "fit": 5,
+      "real": "做重建、标定、深度估计，把算法跑在真实设备和真实数据上。",
+      "tryIt": "用手机拍一组照片，完整跑一次重建并导出可交互模型。"
+    },
+    {
+      "id": "c3",
+      "name": "Graphics Engineer",
+      "dir": "graphics",
+      "fit": 4,
+      "real": "写渲染管线、优化性能、实现光照与材质，为画面效果负责。",
+      "tryIt": "实现一个 PBR 材质球，并用性能分析工具找出瓶颈。"
+    },
+    {
+      "id": "c4",
+      "name": "Applied Scientist",
+      "dir": "vision3d",
+      "fit": 4,
+      "real": "一半读论文一半写代码，把新方法落到真实问题上。",
+      "tryIt": "复现一篇近半年的论文，记录卡住的每一步。"
+    },
+    {
+      "id": "c5",
+      "name": "XR Engineer",
+      "dir": "xr",
+      "fit": 3,
+      "real": "做空间交互、追踪与渲染，处理真实世界的各种不完美。",
+      "tryIt": "做一个能抓取物体的 WebXR 场景，测试 30 分钟。"
+    },
+    {
+      "id": "c6",
+      "name": "AI Product Manager",
+      "dir": "product",
+      "fit": 4,
+      "real": "定义问题、判断优先级、在能力边界内做取舍。",
+      "tryIt": "给你熟悉的 3 个 AI 产品各写一份改进提案。"
+    },
+    {
+      "id": "c7",
+      "name": "Researcher / PhD",
+      "dir": "vision3d",
+      "fit": 3,
+      "real": "长期面对不确定问题，大量阅读、推导与失败实验。",
+      "tryIt": "花 4 小时只读论文不写代码，看自己是否坐得住。"
+    },
+    {
+      "id": "c8",
+      "name": "Display / Optics Engineer",
+      "dir": "display",
+      "fit": 3,
+      "real": "光学设计、显示系统、计算成像，软硬件结合。",
+      "tryIt": "读一篇计算显示综述，画出它的核心光学链路。"
+    }
+  ],
+  "research": [
+    {
+      "id": "q1",
+      "q": "如何从 2D 图像真正理解 3D 世界？",
+      "dir": "vision3d",
+      "status": "curious"
+    },
+    {
+      "id": "q2",
+      "q": "3D Gaussian Splatting 为什么有效，它的边界在哪？",
+      "dir": "vision3d",
+      "status": "doing"
+    },
+    {
+      "id": "q3",
+      "q": "AI 和 3D Vision 结合的下一个突破点是什么？",
+      "dir": "vision3d",
+      "status": "curious"
+    },
+    {
+      "id": "q4",
+      "q": "AR 中最困难的问题到底是显示、追踪还是交互？",
+      "dir": "xr",
+      "status": "curious"
+    },
+    {
+      "id": "q5",
+      "q": "三维显示的未来方向是光场还是全息？",
+      "dir": "display",
+      "status": "curious"
+    },
+    {
+      "id": "q6",
+      "q": "AI 能不能和计算显示结合，做出真正的裸眼 3D？",
+      "dir": "display",
+      "status": "curious"
+    },
+    {
+      "id": "q7",
+      "q": "Agent 的可靠性瓶颈是模型能力还是系统设计？",
+      "dir": "product",
+      "status": "curious"
+    }
+  ],
+  "daily": {
+    "2026-09-15": {
+      "done": {
+        "0": false
+      },
+      "discover": "",
+      "best": "",
+      "worst": "",
+      "keep": 0,
+      "conclusion": ""
+    }
+  },
+  "decision": {
+    "hypothesis": "",
+    "uncertainty": "",
+    "next": ""
+  }
+}
